@@ -38,23 +38,27 @@ public class NodeInterface {
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
     public func runModule(targetFile: String = "index.js") async throws {
-        fatalError("Not implemented yet")
-//        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("module_\(UUID().uuidString).sock")
-//        print(temp)
-//        FileManager.default.createFile(atPath: temp.path, contents: nil)
-//
-//        let socket = try UniSocket(peer: temp.standardizedFileURL.path)
-//
-//        try socket.attach()
-//
-//        guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [temp.path]) else {
-//            return
-//        }
-//
-//        process.process.waitUntilExit()
-//
-//        try socket.close()
-//
-//        return
+        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("module_\(UUID().uuidString).sock")
+        print(temp)
+        guard let socketAddr = makeSocket(path: temp.standardizedFileURL.path) else {
+            print("Did not create socket")
+            return
+        }
+        beginListening(socket: socketAddr)
+        Task { @MainActor in
+            acceptConnection(socket: socketAddr)
+        }
+
+        let socket = try UniSocket(peer: temp.standardizedFileURL.path)
+        try socket.attach()
+
+        guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [temp.path]) else {
+            return
+        }
+        process.process.waitUntilExit()
+
+        try socket.close()
+
+        return
     }
 }
