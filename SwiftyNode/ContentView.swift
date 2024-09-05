@@ -6,28 +6,29 @@
 //
 
 import SwiftUI
+import SwiftyNodeKit
 
 struct ContentView: View {
-    let nodeLocation: String
-
     @AppStorage("moduleLocation") var moduleLocation: String = ""
     @State var moduleOutput: String = ""
 
     init() {
-        let nodeString = shell("where node").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard nodeString.hasSuffix("node") else {
-            fatalError("Node not found")
-        }
-        nodeLocation = nodeString
     }
 
     var body: some View {
         VStack {
-            Text("Node location: " + nodeLocation)
-            Text("Node version: " + shell("\(nodeLocation) --version"))
             TextField("Module location:", text: $moduleLocation)
             Button("Run module") {
-                moduleOutput = shell("\(nodeLocation) \(moduleLocation)/index.js")
+                Task {
+                    guard let nodeRuntime = await NodeJS.builtin else {
+                        moduleOutput = "No node runtime found"
+                        return
+                    }
+                    let moduleURL = URL(filePath: moduleLocation)
+                    moduleOutput = "Running \(moduleURL.standardizedFileURL.relativePath)"
+                    let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
+                    moduleOutput = await interface.runModule()
+                }
             }
             Text("Module output:")
             GroupBox {
@@ -52,10 +53,13 @@ func shell(_ command: String) -> String {
     task.standardInput = nil
     task.launch()
 
-    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-    let output = String(data: data, encoding: .utf8)!
-
-    return output
+    do {
+        guard let data = try pipe.fileHandleForReading.readToEnd() else { return "" }
+        let output = String(data: data, encoding: .utf8)!
+        return output
+    } catch {
+        return "ERROR: \(error)"
+    }
 }
 
 #Preview {

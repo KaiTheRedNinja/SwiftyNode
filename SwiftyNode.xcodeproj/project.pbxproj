@@ -6,8 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */ = {isa = PBXBuildFile; fileRef = 93F654EB2C89D316007847D1 /* SwiftyNodeKit */; };
+		93F654EF2C89D457007847D1 /* SwiftyNodeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 93F654EE2C89D457007847D1 /* SwiftyNodeKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		93F654D82C89B291007847D1 /* SwiftyNode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyNode.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		93F654EB2C89D316007847D1 /* SwiftyNodeKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = SwiftyNodeKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +29,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93F654EF2C89D457007847D1 /* SwiftyNodeKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,7 +39,9 @@
 		93F654CF2C89B291007847D1 = {
 			isa = PBXGroup;
 			children = (
+				93F654EB2C89D316007847D1 /* SwiftyNodeKit */,
 				93F654DA2C89B291007847D1 /* SwiftyNode */,
+				93F654ED2C89D457007847D1 /* Frameworks */,
 				93F654D92C89B291007847D1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +52,13 @@
 				93F654D82C89B291007847D1 /* SwiftyNode.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		93F654ED2C89D457007847D1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +81,7 @@
 			);
 			name = SwiftyNode;
 			packageProductDependencies = (
+				93F654EE2C89D457007847D1 /* SwiftyNodeKit */,
 			);
 			productName = SwiftyNode;
 			productReference = 93F654D82C89B291007847D1 /* SwiftyNode.app */;
@@ -109,6 +126,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +337,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		93F654EE2C89D457007847D1 /* SwiftyNodeKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftyNodeKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 93F654D02C89B291007847D1 /* Project object */;
 }
