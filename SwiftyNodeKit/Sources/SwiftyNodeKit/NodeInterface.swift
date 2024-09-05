@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import IPCSocket
 
 /// An interface to run scripts with NodeJS
 @NodeActor
@@ -21,9 +22,39 @@ public class NodeInterface {
         self.moduleLocation = moduleLocation
     }
 
-    /// Runs the module using `node [path here]`. By default, it executes `index.js` file within
-    /// the ``moduleLocation``, but it can be changed.
-    public func runModule(targetFile: String = "index.js") -> String {
-        nodeRuntime.execute(moduleLocation.appendingPathComponent(targetFile))
+    /// Executes the module using `node [path here]`, and returns its output value.
+    ///
+    /// This function is a suspending function that waits until node has exited, then returns a string. If the file never
+    /// exits, this function will not exit and will cause the caller to hang.
+    ///
+    /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
+    public func executeModule(targetFile: String = "index.js") throws -> String {
+        try nodeRuntime.execute(moduleLocation.appendingPathComponent(targetFile))
+    }
+
+    /// Runs the module using `node [path here]`, without waiting for it to finish.
+    ///
+    /// This function is not a suspending function.
+    ///
+    /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
+    public func runModule(targetFile: String = "index.js") async throws {
+        fatalError("Not implemented yet")
+//        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("module_\(UUID().uuidString).sock")
+//        print(temp)
+//        FileManager.default.createFile(atPath: temp.path, contents: nil)
+//
+//        let socket = try UniSocket(peer: temp.standardizedFileURL.path)
+//
+//        try socket.attach()
+//
+//        guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [temp.path]) else {
+//            return
+//        }
+//
+//        process.process.waitUntilExit()
+//
+//        try socket.close()
+//
+//        return
     }
 }

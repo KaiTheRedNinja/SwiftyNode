@@ -27,7 +27,12 @@ struct ContentView: View {
                     let moduleURL = URL(filePath: moduleLocation)
                     moduleOutput = "Running \(moduleURL.standardizedFileURL.relativePath)"
                     let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
-                    moduleOutput = await interface.runModule()
+                    do {
+                        try await interface.runModule()
+                        moduleOutput = "DONE!"
+                    } catch {
+                        moduleOutput = "ERROR: \(error)"
+                    }
                 }
             }
             Text("Module output:")

@@ -12,8 +12,8 @@ import Foundation
 public class NodeJS {
     /// A `NodeJS` instance representing the builtin NodeJS runtime, if it exists.
     public static let builtin: NodeJS? = {
-        let nodeString = shell("where node").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard nodeString.hasPrefix("/") && nodeString.hasSuffix("node") else {
+        let nodeString = try? shellAndWait("where node").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let nodeString, nodeString.hasPrefix("/") && nodeString.hasSuffix("node") else {
             return nil
         }
         let nodeLocation = URL(fileURLWithPath: nodeString)
@@ -39,19 +39,49 @@ public class NodeJS {
     /// Note that this value is NOT cached, and each call to this function requires a shell command and is therefore
     /// extremely expensive, time and resource wise.
     public func getNodeVersion() -> String {
-        shell("\(nodePath) --version")
+        (try? shellAndWait("\(nodePath) --version")) ?? "Could not obtain version"
     }
 
     /// Uses the NodeJS runtime to execute a javascript file in a node project.
     ///
     /// This function is a suspending function that waits until node has exited, then returns a string. If the file never
     /// exits, this function will not exit and will cause the caller to hang.
-    public func execute(_ fileURL: URL) -> String {
-        shell("\(nodePath) \(fileURL.standardizedFileURL.relativePath)")
+    public func execute(_ fileURL: URL, args: [String] = []) throws -> String {
+        var command = "\(nodePath) \(fileURL.standardizedFileURL.relativePath)"
+        if !args.isEmpty {
+            command += " "
+            command += args.joined(separator: " ")
+        }
+        return try shellAndWait(command)
+    }
+
+    /// Uses the NodeJS runtime to run a javascript file in a node project.
+    ///
+    /// This function is not a suspending function. It will start the node process, then return an object that allows the
+    /// caller to manage it.
+    public func run(_ fileURL: URL, args: [String] = []) throws -> NodeProcess {
+        var command = "\(nodePath) \(fileURL.standardizedFileURL.relativePath)"
+        if !args.isEmpty {
+            command += " "
+            command += args.joined(separator: " ")
+        }
+        let (process, pipe) = try shell(command)
+        return .init(process: process, pipe: pipe)
     }
 }
 
-private func shell(_ command: String) -> String {
+/// An object wrapping a `Process`, representing a NodeJS process
+public class NodeProcess {
+    var process: Process
+    var pipe: Pipe
+
+    init(process: Process, pipe: Pipe) {
+        self.process = process
+        self.pipe = pipe
+    }
+}
+
+private func shell(_ command: String) throws -> (Process, Pipe) {
     let task = Process()
     let pipe = Pipe()
 
@@ -60,7 +90,14 @@ private func shell(_ command: String) -> String {
     task.arguments = ["--login", "-c", command]
     task.launchPath = "/bin/zsh"
     task.standardInput = nil
-    task.launch()
+    try task.run()
+
+    return (task, pipe)
+}
+
+private func shellAndWait(_ command: String) throws -> String {
+    let (process, pipe) = try shell(command)
+    process.waitUntilExit()
 
     do {
         guard let data = try pipe.fileHandleForReading.readToEnd() else { return "" }
