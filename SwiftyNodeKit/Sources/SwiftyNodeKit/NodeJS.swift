@@ -43,6 +43,9 @@ public class NodeJS {
     }
 
     /// Uses the NodeJS runtime to execute a javascript file in a node project.
+    ///
+    /// This function is a suspending function that waits until node has exited, then returns a string. If the file never
+    /// exits, this function will not exit and will cause the caller to hang.
     public func execute(_ fileURL: URL) -> String {
         shell("\(nodePath) \(fileURL.standardizedFileURL.relativePath)")
     }
