@@ -279,11 +279,4 @@ public class UniSocket {
             bytesLeft = bytesLeft - rc
         }
     }
-
-    public func recvfrom() throws -> Data {
-
-        throw UniSocketError.error(detail: "not yet implemented")
-
-    }
-
 }

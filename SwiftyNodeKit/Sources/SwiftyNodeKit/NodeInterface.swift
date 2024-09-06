@@ -46,13 +46,33 @@ public class NodeInterface {
             return ""
         }
 
+        print("Process started")
+
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
-        let socket = try UniSocket(peer: name)
+        print("Connecting socket")
 
+        let socket = try UniSocket(peer: name)
         try socket.attach()
 
+        print("Socket connected")
+
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+
+        print("Sending message")
+
+        try socket.send("Good morning!".data(using: .utf8)!)
+
+        print("Reading response")
+
+        let responseData = try socket.recv()
+        let responseStr = String(data: responseData, encoding: .utf8)!
+
+        print("Node responded with \(responseStr)")
+
         try await Task.sleep(nanoseconds: 3_000_000_000)
+
+        print("Terminating process")
 
         process.process.terminate()
 

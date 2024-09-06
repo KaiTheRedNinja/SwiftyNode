@@ -9,6 +9,7 @@ const server = net.createServer((socket) => {
 
   socket.on('data', (data) => {
     console.log('Swift app requested', data.toString());
+    socket.write(JSON.stringify({ response: 'HI! how are ya' }));
   });
 
   socket.on('end', () => {
