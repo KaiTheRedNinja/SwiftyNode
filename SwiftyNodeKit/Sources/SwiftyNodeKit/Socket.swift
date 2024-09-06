@@ -9,7 +9,7 @@ import Foundation
 import Darwin
 
 @preconcurrency
-class Server {
+class Socket {
     private var socket: Int32?
     private var clientSocket: Int32?
     private let socketPath: String
@@ -140,10 +140,6 @@ class Server {
                     print(str)
                 }
             }
-
-//            if let socketDescriptor = self.socketDescriptor {
-//                close(socketDescriptor)
-//            }
         }
     }
 

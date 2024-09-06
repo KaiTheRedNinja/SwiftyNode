@@ -8,23 +8,44 @@
 import Foundation
 
 class NodeCommunicator {
-    var process: NodeProcess
-//    var socket: Socket
+    var process: NodeProcess?
+    var socket: Socket?
 
-    init(process: NodeProcess) {
-        self.process = process
-        fatalError("Not implemented")
+    init() {}
+
+    /// Starts the socket, and returns the socket path
+    func start() -> String {
+        let name = "/tmp/module_\(UUID().uuidString).sock"
+        self.socket = Socket(socketPath: name)
+        socket!.startBroadcasting()
+        return name
     }
 
-    func sendMessage() async throws {
-        fatalError("Not implemented")
+    /// Sends data via the socket
+    func send(_ data: Data) {
+        socket?.sendData("Good morning!".data(using: .utf8)!)
     }
 
-    func readMessage() async throws {
-        fatalError("Not implemented")
+    /// Reads data from the socket
+    func read() { // TODO: turn this into a delegate-based or callback-based thing
+        socket?.readData()
     }
 
+    /// Terminates the process and socket
     func terminate() {
-        fatalError("Not implemented")
+        process?.process.terminate()
+        socket?.stopBroadcasting()
+    }
+
+    /// Reads from the process's console. This function will cause the caller to hang if the
+    /// process has not already been terminated.
+    func readConsole() -> String {
+        do {
+            guard let data = try process?.pipe.fileHandleForReading.readToEnd() else { return "" }
+            let output = String(data: data, encoding: .utf8)!
+            return output
+        } catch {
+            return "Reading Error: \(error)"
+        }
     }
 }

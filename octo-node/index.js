@@ -10,7 +10,14 @@ const client = net.createConnection(socketPath, () => {
 
 client.on('data', (data) => {
   console.log('Swift app requested', data.toString());
-  client.write(JSON.stringify({ response: 'HI! how are ya' }));
+  client.write(JSON.stringify({ 
+    response: 'HI!\nhow are ya',
+    exampleContent: {
+      title: 'Hello World',
+      content: 'This is a test content',
+      tags: ['test', 'hello', 'world'],
+    }
+  }));
 });
 
 client.on('end', () => {

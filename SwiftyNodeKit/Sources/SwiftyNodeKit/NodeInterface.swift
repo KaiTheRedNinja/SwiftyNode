@@ -37,12 +37,8 @@ public class NodeInterface {
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
     public func runModule(targetFile: String = "index.js") async throws -> String {
-        let name = "/tmp/module_\(UUID().uuidString).sock"
-        print(name)
-
-        // create socket
-        let socket = Server(socketPath: name)
-        socket.startBroadcasting()
+        let communicator = NodeCommunicator()
+        let name = communicator.start()
 
         print("Starting process")
 
@@ -50,28 +46,23 @@ public class NodeInterface {
         guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
             return ""
         }
+        
+        communicator.process = process
 
         print("Started process")
 
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
-        // send the message and wait for response
-        socket.sendData("Good morning!".data(using: .utf8)!)
-        socket.readData()
+        communicator.send("Good morning!".data(using: .utf8)!)
+        communicator.read()
 
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
         // terminate the process
         print("Terminating")
-        process.process.terminate()
+        communicator.terminate()
 
         // read output
-        do {
-            guard let data = try process.pipe.fileHandleForReading.readToEnd() else { return "" }
-            let output = String(data: data, encoding: .utf8)!
-            return output
-        } catch {
-            return "Reading Error: \(error)"
-        }
+        return communicator.readConsole()
     }
 }
