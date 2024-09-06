@@ -8,17 +8,19 @@
 import Foundation
 import Socket
 
-class NodeCommunicator {
-    var process: NodeProcess!
-    var socket: Socket!
-    var sendQueue: [Data] = []
+public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
 
-    var callResponses: [UUID: (JSONResponse) -> Void] = [:]
+public class NodeCommunicator {
+    internal var process: NodeProcess!
+    internal var socket: Socket!
+    internal var sendQueue: [Data] = []
+    internal var callResponses: [UUID: (JSONResponse) -> Void] = [:]
+    internal var nativeFunctions: [String: NativeFunction] = [:]
 
-    init() {}
+    public init() {}
 
     /// Starts the socket, and returns the socket path
-    func start() -> String {
+    public func start() -> String {
         let name = "/tmp/module_\(UUID().uuidString).sock"
         self.socket = Socket(socketPath: name)
         socket.delegate = self
@@ -27,7 +29,7 @@ class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function request via the socket
-    func request<R>(method: String, params: [String: any Codable], returns: R.Type) async throws -> R? {
+    public func request<R>(method: String, params: [String: any Codable], returns: R.Type) async throws -> R? {
         let id: UUID = UUID()
         let request = JSONRequest(method: method, params: params, id: id.uuidString)
         let data = try JSONEncoder().encode(request)
@@ -59,6 +61,11 @@ class NodeCommunicator {
         return result
     }
 
+    /// Registers a method that node can call
+    func register(methodName: String, _ method: @escaping NativeFunction) {
+        self.nativeFunctions[methodName] = method
+    }
+
     /// Sends data via the socket.
     ///
     /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Other errors are thrown.
@@ -76,14 +83,14 @@ class NodeCommunicator {
     }
 
     /// Terminates the process and socket
-    func terminate() {
+    public func terminate() {
         process?.process.terminate()
         socket?.stopBroadcasting()
     }
 
     /// Reads from the process's console. This function will cause the caller to hang if the
     /// process has not already been terminated.
-    func readConsole() -> String {
+    public func readConsole() -> String {
         do {
             guard let data = try process.pipe.fileHandleForReading.readToEnd() else { return "" }
             let output = String(data: data, encoding: .utf8)!
@@ -95,7 +102,7 @@ class NodeCommunicator {
 }
 
 extension NodeCommunicator: SocketDelegate {
-    func socketDidConnect(_ socket: Socket) {
+    public func socketDidConnect(_ socket: Socket) {
         Task {
             // clear the queue
             for item in sendQueue {
@@ -105,12 +112,7 @@ extension NodeCommunicator: SocketDelegate {
         }
     }
     
-    func socketDidRead(_ socket: Socket, data: Data) {
-        if let str = String(data: data, encoding: .utf8) {
-            // Now you have converted the Data back to a string
-            print("GOTTEN: \(str)")
-        }
-
+    public func socketDidRead(_ socket: Socket, data: Data) {
         do {
             let response = try JSONResponse.decode(from: data)
             guard let uuid = UUID(uuidString: response.id) else {

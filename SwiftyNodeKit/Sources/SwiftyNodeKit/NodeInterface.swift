@@ -36,38 +36,20 @@ public class NodeInterface {
     /// This function is not a suspending function.
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
-    public func runModule(targetFile: String = "index.js") async throws -> String {
+    public func runModule(targetFile: String = "index.js") async throws -> NodeCommunicator {
         let communicator = NodeCommunicator()
         let name = communicator.start()
-        var terminated: Bool = false
-
-        print("Starting process")
-
-        // terminate the process if it throws
-        defer {
-            if !terminated {
-                communicator.terminate()
-            }
-        }
 
         // start the process
         guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
-            return ""
+            throw NodeError.couldNotStart
         }
         communicator.process = process
 
-        print("Started process")
-
-        let result = try await communicator.request(method: "hi", params: ["something": UUID()], returns: String.self)
-
-        print("Got result: \(result)")
-
-        // kill it
-        print("Terminating")
-        communicator.terminate()
-        terminated = true
-
-        // read output
-        return communicator.readConsole()
+        return communicator
     }
+}
+
+enum NodeError: Error {
+    case couldNotStart
 }

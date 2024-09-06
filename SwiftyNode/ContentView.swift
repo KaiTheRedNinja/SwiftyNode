@@ -10,6 +10,8 @@ import SwiftyNodeKit
 
 struct ContentView: View {
     @AppStorage("moduleLocation") var moduleLocation: String = ""
+    @AppStorage("githubOrg") var githubOrg: String = ""
+    @State var communicator: NodeCommunicator?
     @State var moduleOutput: String = ""
 
     init() {
@@ -18,19 +20,42 @@ struct ContentView: View {
     var body: some View {
         VStack {
             TextField("Module location:", text: $moduleLocation)
-            Button("Run module") {
-                Task {
-                    guard let nodeRuntime = await NodeJS.builtin else {
-                        moduleOutput = "No node runtime found"
-                        return
+            if let communicator {
+                Button("Terminate") {
+                    communicator.terminate()
+                    self.communicator = nil
+                }
+                TextField("Github org:", text: $githubOrg)
+                Button("Request") {
+                    Task {
+                        let result = try await communicator.request(
+                            method: "githubListForOrg",
+                            params: ["orgName": githubOrg],
+                            returns: Any.self
+                        )
+
+                        guard let result = result as? [String] else {
+                            return
+                        }
+
+                        moduleOutput = result.joined(separator: "\n")
                     }
-                    let moduleURL = URL(filePath: moduleLocation)
-                    moduleOutput = "Running \(moduleURL.standardizedFileURL.relativePath)"
-                    let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
-                    do {
-                        moduleOutput = try await interface.runModule()
-                    } catch {
-                        moduleOutput = "Module Error: \(error)"
+                }
+            } else {
+                Button("Run module") {
+                    Task {
+                        guard let nodeRuntime = await NodeJS.builtin else {
+                            moduleOutput = "No node runtime found"
+                            return
+                        }
+                        let moduleURL = URL(filePath: moduleLocation)
+                        moduleOutput = "Running \(moduleURL.standardizedFileURL.relativePath)"
+                        let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
+                        do {
+                            communicator = try await interface.runModule()
+                        } catch {
+                            moduleOutput = "Module Error: \(error)"
+                        }
                     }
                 }
             }
@@ -43,26 +68,6 @@ struct ContentView: View {
             .frame(maxHeight: 400)
         }
         .padding()
-    }
-}
-
-func shell(_ command: String) -> String {
-    let task = Process()
-    let pipe = Pipe()
-
-    task.standardOutput = pipe
-    task.standardError = pipe
-    task.arguments = ["--login", "-c", command]
-    task.launchPath = "/bin/zsh"
-    task.standardInput = nil
-    task.launch()
-
-    do {
-        guard let data = try pipe.fileHandleForReading.readToEnd() else { return "" }
-        let output = String(data: data, encoding: .utf8)!
-        return output
-    } catch {
-        return "ERROR: \(error)"
     }
 }
 
