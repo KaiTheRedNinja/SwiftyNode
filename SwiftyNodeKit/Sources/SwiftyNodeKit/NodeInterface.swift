@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Socket
 
 /// An interface to run scripts with NodeJS
 @NodeActor
@@ -41,46 +40,29 @@ public class NodeInterface {
         let name = "/tmp/module_\(UUID().uuidString).sock"
         print(name)
 
+        // create socket
+        let socket = Server(socketPath: name)
+        socket.startBroadcasting()
+
+        print("Starting process")
+
         // start the process
         guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
             return ""
         }
 
-        // wait for the server to start
-        await withCheckedContinuation { cont in
-            process.pipe.fileHandleForReading.readabilityHandler = { pipe in
-                guard let line = String(data: pipe.availableData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-                    print("Error decoding data: \(pipe.availableData)")
-                    return
-                }
+        print("Started process")
 
-                guard line == "Node.js server listening on \(name)" else {
-                    print("Other console log: [\(line)]")
-                    return
-                }
-
-                cont.resume()
-            }
-        }
-        process.pipe.fileHandleForReading.readabilityHandler = nil
-
-        // connect the socket
-        let socket = try Socket.create(family: .unix, type: .stream, proto: .unix)
-        try socket.connect(to: name)
-
-        // close socket when the function returns
-        defer {
-            socket.close()
-            print("Closed socket")
-        }
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         // send the message and wait for response
-        try socket.write(from: "Good morning!".data(using: .utf8)!)
-        let responseStr = try socket.readString() ?? "no response"
+        socket.sendData("Good morning!".data(using: .utf8)!)
+        socket.readData()
 
-        print("Node responded with \(responseStr)")
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         // terminate the process
+        print("Terminating")
         process.process.terminate()
 
         // read output

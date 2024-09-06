@@ -4,25 +4,25 @@ import os from 'os';
 
 const socketPath = process.argv[2];
 
-const server = net.createServer((socket) => {
-  console.log('Swift app connected');
-
-  socket.on('data', (data) => {
-    console.log('Swift app requested', data.toString());
-    socket.write(JSON.stringify({ response: 'HI! how are ya' }));
-  });
-
-  socket.on('end', () => {
-    console.log('Swift app disconnected');
-  });
+const client = net.createConnection(socketPath, () => {
+  console.log('Connected to Swift app:', socketPath);
 });
 
-server.listen(socketPath, () => {
-  console.log('Node.js server listening on', socketPath);
+client.on('data', (data) => {
+  console.log('Swift app requested', data.toString());
+  client.write(JSON.stringify({ response: 'HI! how are ya' }));
+});
+
+client.on('end', () => {
+  console.log('Disconnected from Swift app');
+});
+
+client.on('error', (err) => {
+  console.error('Connection error:', err);
 });
 
 process.on('SIGINT', () => {
-  server.close();
+  client.end();
   process.exit();
 });
 

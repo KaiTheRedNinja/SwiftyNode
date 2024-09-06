@@ -6,11 +6,10 @@
 //
 
 import Foundation
-import Socket
 
 class NodeCommunicator {
     var process: NodeProcess
-    var socket: Socket
+//    var socket: Socket
 
     init(process: NodeProcess) {
         self.process = process
