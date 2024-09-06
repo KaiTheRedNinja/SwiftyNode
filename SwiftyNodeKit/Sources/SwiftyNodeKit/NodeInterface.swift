@@ -51,10 +51,11 @@ public class NodeInterface {
 
         print("Started process")
 
+        try await communicator.send("Good morning!\n".data(using: .utf8)!)
+
         try await Task.sleep(nanoseconds: 1_000_000_000)
 
-        communicator.send("Good morning!".data(using: .utf8)!)
-        communicator.read()
+        try await communicator.send("good evening!\n".data(using: .utf8)!)
 
         try await Task.sleep(nanoseconds: 1_000_000_000)
 

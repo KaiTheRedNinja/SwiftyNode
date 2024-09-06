@@ -8,11 +8,16 @@
 import Foundation
 import Darwin
 
-@preconcurrency
 class Socket {
     private var socket: Int32?
     private var clientSocket: Int32?
     private let socketPath: String
+
+    public var delegate: (any SocketDelegate)?
+
+    var isConnected: Bool {
+        clientSocket != nil
+    }
 
     init(socketPath: String) {
         self.socketPath = socketPath
@@ -24,6 +29,7 @@ class Socket {
         bindSocket()
         listenOnSocket()
         waitForConnection()
+        beginReadData()
     }
 
     /// Creates a socket for communication.
@@ -70,8 +76,8 @@ class Socket {
 
     /// Waits for a connection and accepts it when available.
     private func waitForConnection() {
-        DispatchQueue.global().async { [weak self] in
-            self?.acceptConnection()
+        Task { @SocketActor in
+            self.acceptConnection()
         }
     }
 
@@ -88,36 +94,41 @@ class Socket {
             return
         }
         log("Connection accepted!")
+        delegate?.socketDidConnect(self)
     }
 
     /// Sends the provided data to the connected client.
     /// - Parameter data: The data to send.
-    func sendData(_ data: Data) {
+    func sendData(_ data: Data) async throws {
         guard let clientSocket = clientSocket else {
             logError("No connected client.")
-            return
+            throw SocketError.clientNotConnected
         }
 
         if data.isEmpty {
             logError("No data to send!")
-            return
+            throw SocketError.noData
         }
 
-        data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
-            let pointer = bytes.bindMemory(to: UInt8.self)
-            let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, data.count, 0)
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
+            data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+                let pointer = bytes.bindMemory(to: UInt8.self)
+                let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, data.count, 0)
 
-            if bytesWritten == -1 {
-                logError("Error sending data")
-                return
+                if bytesWritten == -1 {
+                    logError("Error sending data")
+                    cont.resume(throwing: SocketError.sendFailed)
+                    return
+                }
+                log("\(bytesWritten) bytes written")
+                cont.resume()
             }
-            log("\(bytesWritten) bytes written")
         }
     }
 
     /// Reads data from the connected socket.
-    func readData() {
-        DispatchQueue.global().async {
+    private func beginReadData() {
+        Task { @SocketActor in
             while true {
                 var buffer = [UInt8](repeating: 0, count: 1024)
                 guard let socket = self.clientSocket else {
@@ -134,11 +145,7 @@ class Socket {
                 // Print the data for debugging purposes
                 let data = Data(buffer[..<bytesRead])
                 self.log("Received data: \(data)")
-
-                if let str = String(data: data, encoding: .utf8) {
-                    // Now you have converted the Data back to a string
-                    print(str)
-                }
+                self.delegate?.socketDidRead(self, data: data)
             }
         }
     }
@@ -168,4 +175,15 @@ class Socket {
     private func logError(_ message: String) {
         print("ServerUnixSocket: [ERROR] \(message)")
     }
+}
+
+protocol SocketDelegate {
+    func socketDidConnect(_ socket: Socket)
+    func socketDidRead(_ socket: Socket, data: Data)
+}
+
+enum SocketError: Error {
+    case clientNotConnected
+    case noData
+    case sendFailed
 }

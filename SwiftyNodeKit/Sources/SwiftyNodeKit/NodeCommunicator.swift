@@ -8,8 +8,9 @@
 import Foundation
 
 class NodeCommunicator {
-    var process: NodeProcess?
-    var socket: Socket?
+    var process: NodeProcess!
+    var socket: Socket!
+    var sendQueue: [Data] = []
 
     init() {}
 
@@ -17,35 +18,61 @@ class NodeCommunicator {
     func start() -> String {
         let name = "/tmp/module_\(UUID().uuidString).sock"
         self.socket = Socket(socketPath: name)
-        socket!.startBroadcasting()
+        socket.delegate = self
+        socket.startBroadcasting()
         return name
     }
 
-    /// Sends data via the socket
-    func send(_ data: Data) {
-        socket?.sendData("Good morning!".data(using: .utf8)!)
-    }
+    /// Sends data via the socket.
+    ///
+    /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Other errors are thrown.
+    func send(_ data: Data) async throws {
+        sendQueue.append(data)
+        guard socket.isConnected else {
+            print("Socket not connected")
+            return
+        }
 
-    /// Reads data from the socket
-    func read() { // TODO: turn this into a delegate-based or callback-based thing
-        socket?.readData()
+        for item in sendQueue {
+            try await socket.sendData(item)
+        }
+        sendQueue = []
     }
 
     /// Terminates the process and socket
     func terminate() {
-        process?.process.terminate()
-        socket?.stopBroadcasting()
+        process.process.terminate()
+        socket.stopBroadcasting()
     }
 
     /// Reads from the process's console. This function will cause the caller to hang if the
     /// process has not already been terminated.
     func readConsole() -> String {
         do {
-            guard let data = try process?.pipe.fileHandleForReading.readToEnd() else { return "" }
+            guard let data = try process.pipe.fileHandleForReading.readToEnd() else { return "" }
             let output = String(data: data, encoding: .utf8)!
             return output
         } catch {
             return "Reading Error: \(error)"
+        }
+    }
+}
+
+extension NodeCommunicator: SocketDelegate {
+    func socketDidConnect(_ socket: Socket) {
+        Task {
+            // clear the queue
+            for item in sendQueue {
+                try await socket.sendData(item)
+            }
+            sendQueue = []
+        }
+    }
+    
+    func socketDidRead(_ socket: Socket, data: Data) {
+        if let str = String(data: data, encoding: .utf8) {
+            // Now you have converted the Data back to a string
+            print("GOTTEN: \(str)")
         }
     }
 }
