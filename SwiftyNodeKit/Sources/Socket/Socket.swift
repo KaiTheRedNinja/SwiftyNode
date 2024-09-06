@@ -51,11 +51,11 @@ public class Socket {
                 let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, data.count, 0)
 
                 if bytesWritten == -1 {
-                    logError("Error sending data")
+                    logError("Error sending data: \(bytesWritten)")
                     cont.resume(throwing: SocketError.sendFailed)
                     return
                 }
-                log("\(bytesWritten) bytes written")
+                log("\(bytesWritten) bytes written out of \(data.count) bytes")
                 cont.resume()
             }
         }
@@ -73,7 +73,7 @@ public class Socket {
 
                 let bytesRead = Darwin.read(socket, &buffer, buffer.count)
                 if bytesRead <= 0 {
-                    self.logError("Error reading from socket or connection closed")
+                    self.logError("Error reading from socket or connection closed: \(bytesRead)")
                     break // exit loop on error or closure of connection
                 }
 

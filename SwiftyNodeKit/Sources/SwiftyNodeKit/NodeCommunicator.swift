@@ -28,6 +28,16 @@ public class NodeCommunicator {
         return name
     }
 
+    /// Makes a JSON-RPC function notification via the socket
+    public func notify(method: String, params: [String: any Codable]) async throws {
+        let request = JSONRequest(method: method, params: params, id: nil)
+        let data = try JSONEncoder().encode(request)
+
+        Task {
+            try await self.send(data)
+        }
+    }
+
     /// Makes a JSON-RPC function request via the socket
     public func request<R>(method: String, params: [String: any Codable], returns: R.Type) async throws -> R? {
         let id: UUID = UUID()

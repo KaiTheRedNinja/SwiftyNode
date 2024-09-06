@@ -41,6 +41,15 @@ struct ContentView: View {
                         moduleOutput = result.joined(separator: "\n")
                     }
                 }
+
+                Button("Stress test") { // NOTE: the limit seems to be around 8000 bytes. I'm treating it as 4096 to be safe.
+                    Task {
+                        _ = try await communicator.notify(
+                            method: .init(repeating: "G", count: 8168),
+                            params: [:]
+                        )
+                    }
+                }
             } else {
                 Button("Run module") {
                     Task {
