@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Socket
 
 class NodeCommunicator {
     var process: NodeProcess!

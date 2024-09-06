@@ -1,16 +1,16 @@
 //
-//  File.swift
+//  SocketActor.swift
 //  SwiftyNodeKit
 //
-//  Created by Kai Quan Tay on 5/9/24.
+//  Created by Kai Quan Tay on 6/9/24.
 //
 
 import Foundation
 
-/// Actor for the NodeJS runtime.
-@globalActor public actor NodeActor {
+/// Actor for the socket connections and reading
+@globalActor public actor SocketActor {
     /// Shared singleton.
-    public static let shared = NodeActor()
+    public static let shared = SocketActor()
 
     /// Singleton initializer.
     private init() {}
@@ -22,7 +22,7 @@ import Foundation
     /// - Returns: Whatever the function returns.
     public static func run<T: Sendable>(
         resultType _: T.Type = T.self,
-        body run: @NodeActor () throws -> T
+        body run: @SocketActor () throws -> T
     ) async rethrows -> T {
         return try await run()
     }
