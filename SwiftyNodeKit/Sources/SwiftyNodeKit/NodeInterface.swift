@@ -39,23 +39,33 @@ public class NodeInterface {
     public func runModule(targetFile: String = "index.js") async throws -> String {
         let communicator = NodeCommunicator()
         let name = communicator.start()
+        var terminated: Bool = false
 
         print("Starting process")
+
+        // terminate the process if it throws
+        defer {
+            if !terminated {
+                communicator.terminate()
+            }
+        }
 
         // start the process
         guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
             return ""
         }
-        
         communicator.process = process
 
         print("Started process")
 
         let result = try await communicator.request(method: "hi", params: ["something": UUID()], returns: String.self)
 
-        // terminate the process
+        print("Got result: \(result)")
+
+        // kill it
         print("Terminating")
         communicator.terminate()
+        terminated = true
 
         // read output
         return communicator.readConsole()

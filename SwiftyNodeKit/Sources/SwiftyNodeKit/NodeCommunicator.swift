@@ -31,21 +31,32 @@ class NodeCommunicator {
         let id: UUID = UUID()
         let request = JSONRequest(method: method, params: params, id: id.uuidString)
         let data = try JSONEncoder().encode(request)
+
         Task {
             try await self.send(data)
         }
-        return try await withCheckedThrowingContinuation { cont in
+
+        let result: R? = try await withCheckedThrowingContinuation { cont in
             callResponses[id] = { response in
-                print("Response called!")
+                print("Response yes")
+
+                defer {
+                    self.callResponses.removeValue(forKey: id)
+                }
+
                 if let error = response.error {
+                    print("Returning error")
                     cont.resume(throwing: error)
                     return
                 }
 
                 let result = response.result as? R
+                print("Resuming")
                 cont.resume(returning: result)
             }
         }
+
+        return result
     }
 
     /// Sends data via the socket.
@@ -66,8 +77,8 @@ class NodeCommunicator {
 
     /// Terminates the process and socket
     func terminate() {
-        process.process.terminate()
-        socket.stopBroadcasting()
+        process?.process.terminate()
+        socket?.stopBroadcasting()
     }
 
     /// Reads from the process's console. This function will cause the caller to hang if the
@@ -106,6 +117,8 @@ extension NodeCommunicator: SocketDelegate {
                 print("Response does not have a valid UUID")
                 return
             }
+
+            print("Response: \(response)")
 
             callResponses[uuid]?(response)
         } catch {
