@@ -2,23 +2,28 @@ import net from 'net';
 import path from 'path';
 import os from 'os';
 
-// The communication URL will always be the second argument
 const socketPath = process.argv[2];
-console.log(socketPath);
 
-// import { Octokit } from "@octokit/rest";
+const server = net.createServer((socket) => {
+  console.log('Swift app connected');
 
-// const octokit = new Octokit();
+  socket.on('data', (data) => {
+    console.log('Swift app requested', data.toString());
+  });
 
-// octokit.rest.repos
-//   .listForOrg({
-//     org: "CodeEditApp",
-//     type: "public",
-//   })
-//   .then(({ data }) => {
-//     console.log(data)
-//   });
+  socket.on('end', () => {
+    console.log('Swift app disconnected');
+  });
+});
 
+server.listen(socketPath, () => {
+  console.log('Node.js server listening on', socketPath);
+});
+
+process.on('SIGINT', () => {
+  server.close();
+  process.exit();
+});
 
 // import { Octokit } from "@octokit/rest";
 

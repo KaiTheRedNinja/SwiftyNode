@@ -37,28 +37,35 @@ public class NodeInterface {
     /// This function is not a suspending function.
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
-    public func runModule(targetFile: String = "index.js") async throws {
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("module_\(UUID().uuidString).sock")
+    public func runModule(targetFile: String = "index.js") async throws -> String {
+        let name = "/tmp/module_\(UUID().uuidString).sock"
+        let temp = URL(fileURLWithPath: name)
         print(temp)
-        guard let socketAddr = makeSocket(path: temp.standardizedFileURL.path) else {
-            print("Did not create socket")
-            return
-        }
-        beginListening(socket: socketAddr)
-        Task { @MainActor in
-            acceptConnection(socket: socketAddr)
+
+        guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
+            return ""
         }
 
-        let socket = try UniSocket(peer: temp.standardizedFileURL.path)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+
+        let socket = try UniSocket(peer: name)
+
         try socket.attach()
 
-        guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [temp.path]) else {
-            return
-        }
-        process.process.waitUntilExit()
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+
+        process.process.terminate()
+
+        print("Terminated process")
 
         try socket.close()
 
-        return
+        do {
+            guard let data = try process.pipe.fileHandleForReading.readToEnd() else { return "" }
+            let output = String(data: data, encoding: .utf8)!
+            return output
+        } catch {
+            return "Reading Error: \(error)"
+        }
     }
 }

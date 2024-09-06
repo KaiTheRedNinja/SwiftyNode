@@ -36,7 +36,7 @@ func makeSocket(path: String) -> Int32? {
     return socket
 }
 
-func beginListening(socket: Int32, count: Int32 = 2) {
+func beginListening(socket: Int32, count: Int32 = 1) {
     print("Listening")
     Darwin.listen(socket, count)
 }
