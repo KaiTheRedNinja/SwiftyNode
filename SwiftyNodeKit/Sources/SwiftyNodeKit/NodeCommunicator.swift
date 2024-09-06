@@ -6,3 +6,26 @@
 //
 
 import Foundation
+import Socket
+
+class NodeCommunicator {
+    var process: NodeProcess
+    var socket: Socket
+
+    init(process: NodeProcess) {
+        self.process = process
+        fatalError("Not implemented")
+    }
+
+    func sendMessage() async throws {
+        fatalError("Not implemented")
+    }
+
+    func readMessage() async throws {
+        fatalError("Not implemented")
+    }
+
+    func terminate() {
+        fatalError("Not implemented")
+    }
+}
