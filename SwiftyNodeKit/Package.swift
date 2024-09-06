@@ -14,10 +14,17 @@ let package = Package(
             name: "SwiftyNodeKit",
             targets: ["SwiftyNodeKit"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/Kitura/BlueSocket.git", branch: "master")
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SwiftyNodeKit"),
+            name: "SwiftyNodeKit",
+            dependencies: [
+                .product(name: "Socket", package: "BlueSocket")
+            ]
+        ),
     ]
 )

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import IPCSocket
+import Socket
 
 /// An interface to run scripts with NodeJS
 @NodeActor
@@ -39,47 +39,51 @@ public class NodeInterface {
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
     public func runModule(targetFile: String = "index.js") async throws -> String {
         let name = "/tmp/module_\(UUID().uuidString).sock"
-        let temp = URL(fileURLWithPath: name)
-        print(temp)
+        print(name)
 
+        // start the process
         guard let process = try? nodeRuntime.run(moduleLocation.appendingPathComponent(targetFile), args: [name]) else {
             return ""
         }
 
-        print("Process started")
+        // wait for the server to start
+        await withCheckedContinuation { cont in
+            process.pipe.fileHandleForReading.readabilityHandler = { pipe in
+                guard let line = String(data: pipe.availableData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                    print("Error decoding data: \(pipe.availableData)")
+                    return
+                }
 
-        try await Task.sleep(nanoseconds: 1_000_000_000)
+                guard line == "Node.js server listening on \(name)" else {
+                    print("Other console log: [\(line)]")
+                    return
+                }
 
-        print("Connecting socket")
+                cont.resume()
+            }
+        }
+        process.pipe.fileHandleForReading.readabilityHandler = nil
 
-        let socket = try UniSocket(peer: name)
-        try socket.attach()
+        // connect the socket
+        let socket = try Socket.create(family: .unix, type: .stream, proto: .unix)
+        try socket.connect(to: name)
 
-        print("Socket connected")
+        // close socket when the function returns
+        defer {
+            socket.close()
+            print("Closed socket")
+        }
 
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        print("Sending message")
-
-        try socket.send("Good morning!".data(using: .utf8)!)
-
-        print("Reading response")
-
-        let responseData = try socket.recv()
-        let responseStr = String(data: responseData, encoding: .utf8)!
+        // send the message and wait for response
+        try socket.write(from: "Good morning!".data(using: .utf8)!)
+        let responseStr = try socket.readString() ?? "no response"
 
         print("Node responded with \(responseStr)")
 
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-
-        print("Terminating process")
-
+        // terminate the process
         process.process.terminate()
 
-        print("Terminated process")
-
-        try socket.close()
-
+        // read output
         do {
             guard let data = try process.pipe.fileHandleForReading.readToEnd() else { return "" }
             let output = String(data: data, encoding: .utf8)!
