@@ -45,19 +45,32 @@ public class Socket {
             throw SocketError.noData
         }
 
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
-            data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
-                let pointer = bytes.bindMemory(to: UInt8.self)
-                let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, data.count, 0)
+        let chunkSize = 4096
+        var offset = 0
 
-                if bytesWritten == -1 {
-                    logError("Error sending data: \(bytesWritten)")
-                    cont.resume(throwing: SocketError.sendFailed)
-                    return
+        while offset < data.count {
+            let remainingBytes = data.count - offset
+            let currentChunkSize = min(chunkSize, remainingBytes)
+
+            let range = offset..<(offset + currentChunkSize)
+            let chunk = data.subdata(in: range)
+
+            try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
+                chunk.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+                    let pointer = bytes.bindMemory(to: UInt8.self)
+                    let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, chunk.count, 0)
+
+                    if bytesWritten == -1 {
+                        logError("Error sending data: \(bytesWritten)")
+                        cont.resume(throwing: SocketError.sendFailed)
+                        return
+                    }
+                    log("\(bytesWritten) bytes written out of \(chunk.count) bytes")
+                    cont.resume()
                 }
-                log("\(bytesWritten) bytes written out of \(data.count) bytes")
-                cont.resume()
             }
+
+            offset += currentChunkSize
         }
     }
 

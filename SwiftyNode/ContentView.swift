@@ -23,6 +23,7 @@ struct ContentView: View {
             if let communicator {
                 Button("Terminate") {
                     communicator.terminate()
+                    moduleOutput = communicator.readConsole()
                     self.communicator = nil
                 }
                 TextField("Github org:", text: $githubOrg)
@@ -42,11 +43,17 @@ struct ContentView: View {
                     }
                 }
 
-                Button("Stress test") { // NOTE: the limit seems to be around 8000 bytes. I'm treating it as 4096 to be safe.
+                Button("Stress test") { // NOTE: the limit seems to be around 8192 bytes. I'm treating it as 4096 to be safe.
                     Task {
-                        _ = try await communicator.notify(
-                            method: .init(repeating: "G", count: 8168),
-                            params: [:]
+                        for i in 0..<5 {
+                            _ = try await communicator.notify(
+                                method: "t\(i)",
+                                params: nil
+                            )
+                        }
+                        try await communicator.notify(
+                            method: String(repeating: "t", count: 10_000),
+                            params: nil
                         )
                     }
                 }

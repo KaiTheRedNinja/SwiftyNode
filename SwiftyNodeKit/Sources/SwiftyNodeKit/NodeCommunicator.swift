@@ -10,6 +10,7 @@ import Socket
 
 public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
 
+@NodeActor
 public class NodeCommunicator {
     internal var process: NodeProcess!
     internal var socket: Socket!
@@ -29,7 +30,7 @@ public class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function notification via the socket
-    public func notify(method: String, params: [String: any Codable]) async throws {
+    public func notify(method: String, params: [String: any Encodable]?) async throws {
         let request = JSONRequest(method: method, params: params, id: nil)
         let data = try JSONEncoder().encode(request)
 
@@ -39,7 +40,7 @@ public class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function request via the socket
-    public func request<R>(method: String, params: [String: any Codable], returns: R.Type) async throws -> R? {
+    public func request<R>(method: String, params: [String: any Encodable], returns: R.Type) async throws -> R? {
         let id: UUID = UUID()
         let request = JSONRequest(method: method, params: params, id: id.uuidString)
         let data = try JSONEncoder().encode(request)
@@ -80,7 +81,9 @@ public class NodeCommunicator {
     ///
     /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Other errors are thrown.
     private func send(_ data: Data) async throws {
-        sendQueue.append(data)
+        let id = Int.random(in: 0...10_000)
+        let markedData = "[START: \(id)]".data(using: .utf8)! + data + "[END: \(id)]".data(using: .utf8)!
+        sendQueue.append(markedData)
         guard socket.isConnected else {
             print("Socket not connected")
             return
