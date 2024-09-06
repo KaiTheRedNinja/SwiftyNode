@@ -15,10 +15,14 @@ client.on('data', (data) => {
   console.log('Swift app requested', method);
   client.write(JSON.stringify({
     id: id,
-    result: {
-      calledMethod: method,
-      success: true
+    error: {
+      code: 0,
+      message: 'testing'
     }
+    // result: {
+    //   calledMethod: method,
+    //   success: true
+    // }
   }));
 });
 

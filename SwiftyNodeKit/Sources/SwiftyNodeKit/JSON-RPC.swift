@@ -35,13 +35,35 @@ public struct JSONResponse {
     public var result: Any?
     public var error: JSONResponseError?
     public var id: String
+
+    /// Decodes a response from data
+    static func decode(from data: Data) throws -> JSONResponse {
+        let object = try JSONSerialization.jsonObject(with: data)
+        guard let object = object as? [String: Any],
+              let id = object["id"] as? String,
+              UUID(uuidString: id) != nil
+        else {
+            print("Could not parse top level JSON")
+            throw NSError()
+        }
+
+        let result = object["result"]
+        let error: JSONResponseError?
+        if let rawError = object["error"],
+           let encodedError = try? JSONSerialization.data(withJSONObject: rawError, options: []) {
+            error = try JSONDecoder().decode(JSONResponseError.self, from: encodedError)
+        } else {
+            error = nil
+        }
+
+        return JSONResponse(result: result, error: error, id: id)
+    }
 }
 
 /// An error in JSON response
-public struct JSONResponseError {
+public struct JSONResponseError: Error, Codable {
     public var code: Int
     public var message: String
-    public var data: [String: Any]?
 }
 
 // AnyCodable struct to handle Any type

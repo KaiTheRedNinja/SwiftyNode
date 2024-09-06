@@ -51,7 +51,7 @@ public class NodeInterface {
 
         print("Started process")
 
-        try await communicator.request(method: "hi", params: ["something": UUID()], returns: String.self)
+        let result = try await communicator.request(method: "hi", params: ["something": UUID()], returns: String.self)
 
         // terminate the process
         print("Terminating")

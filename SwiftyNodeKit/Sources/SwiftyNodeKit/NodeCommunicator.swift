@@ -34,8 +34,14 @@ class NodeCommunicator {
         Task {
             try await self.send(data)
         }
-        return await withCheckedContinuation { cont in
+        return try await withCheckedThrowingContinuation { cont in
             callResponses[id] = { response in
+                print("Response called!")
+                if let error = response.error {
+                    cont.resume(throwing: error)
+                    return
+                }
+
                 let result = response.result as? R
                 cont.resume(returning: result)
             }
@@ -95,14 +101,13 @@ extension NodeCommunicator: SocketDelegate {
         }
 
         do {
-            let object = try JSONSerialization.jsonObject(with: data)
-            guard let object = object as? [String: Any] else {
-                print("Could not parse top level JSON")
+            let response = try JSONResponse.decode(from: data)
+            guard let uuid = UUID(uuidString: response.id) else {
+                print("Response does not have a valid UUID")
                 return
             }
-            if let id = object["id"] as? String {
-                print("Response: \(id)")
-            }
+
+            callResponses[uuid]?(response)
         } catch {
             print("Error parsing JSON: \(error.localizedDescription)")
         }
