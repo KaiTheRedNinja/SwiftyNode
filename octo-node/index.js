@@ -9,13 +9,15 @@ const client = net.createConnection(socketPath, () => {
 });
 
 client.on('data', (data) => {
-  console.log('Swift app requested', data.toString());
-  client.write(JSON.stringify({ 
-    response: 'HI!\nhow are ya',
-    exampleContent: {
-      title: 'Hello World',
-      content: 'This is a test content',
-      tags: ['test', 'hello', 'world'],
+  let message = JSON.parse(data.toString());
+  let id = message.id;
+  let method = message.method;
+  console.log('Swift app requested', method);
+  client.write(JSON.stringify({
+    id: id,
+    result: {
+      calledMethod: method,
+      success: true
     }
   }));
 });

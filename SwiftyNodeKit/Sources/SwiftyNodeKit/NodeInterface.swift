@@ -51,13 +51,7 @@ public class NodeInterface {
 
         print("Started process")
 
-        try await communicator.send("Good morning!\n".data(using: .utf8)!)
-
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        try await communicator.send("good evening!\n".data(using: .utf8)!)
-
-        try await Task.sleep(nanoseconds: 1_000_000_000)
+        try await communicator.request(method: "hi", params: ["something": UUID()], returns: String.self)
 
         // terminate the process
         print("Terminating")

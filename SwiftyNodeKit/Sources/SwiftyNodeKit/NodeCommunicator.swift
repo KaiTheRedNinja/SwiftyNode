@@ -13,6 +13,8 @@ class NodeCommunicator {
     var socket: Socket!
     var sendQueue: [Data] = []
 
+    var callResponses: [UUID: (JSONResponse) -> Void] = [:]
+
     init() {}
 
     /// Starts the socket, and returns the socket path
@@ -24,10 +26,26 @@ class NodeCommunicator {
         return name
     }
 
+    /// Makes a JSON-RPC function request via the socket
+    func request<R>(method: String, params: [String: any Codable], returns: R.Type) async throws -> R? {
+        let id: UUID = UUID()
+        let request = JSONRequest(method: method, params: params, id: id.uuidString)
+        let data = try JSONEncoder().encode(request)
+        Task {
+            try await self.send(data)
+        }
+        return await withCheckedContinuation { cont in
+            callResponses[id] = { response in
+                let result = response.result as? R
+                cont.resume(returning: result)
+            }
+        }
+    }
+
     /// Sends data via the socket.
     ///
     /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Other errors are thrown.
-    func send(_ data: Data) async throws {
+    private func send(_ data: Data) async throws {
         sendQueue.append(data)
         guard socket.isConnected else {
             print("Socket not connected")
@@ -74,6 +92,19 @@ extension NodeCommunicator: SocketDelegate {
         if let str = String(data: data, encoding: .utf8) {
             // Now you have converted the Data back to a string
             print("GOTTEN: \(str)")
+        }
+
+        do {
+            let object = try JSONSerialization.jsonObject(with: data)
+            guard let object = object as? [String: Any] else {
+                print("Could not parse top level JSON")
+                return
+            }
+            if let id = object["id"] as? String {
+                print("Response: \(id)")
+            }
+        } catch {
+            print("Error parsing JSON: \(error.localizedDescription)")
         }
     }
 }
