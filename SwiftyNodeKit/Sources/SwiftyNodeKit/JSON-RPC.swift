@@ -8,6 +8,8 @@
 import Foundation
 
 /// A request made using JSON
+///
+/// Note that if this is a request made from Swift to Node, all values in ``params`` must be `Encodable`.
 public struct JSONRequest: Encodable {
     /// The method to call
     public var method: String
@@ -72,10 +74,19 @@ public struct JSONRequest: Encodable {
 }
 
 /// A response made using JSON
-public struct JSONResponse {
+///
+/// Note that if this is a response from Swift to Node, ``result`` must be `Encodable`.
+public struct JSONResponse: Encodable {
     public var result: Any?
     public var error: JSONResponseError?
     public var id: String
+
+    /// Creates a JSON response
+    init(result: (any Encodable)? = nil, error: JSONResponseError? = nil, id: String) {
+        self.result = result
+        self.error = error
+        self.id = id
+    }
 
     /// Decodes a response from data
     static func decode(from data: Data) throws -> JSONResponse {
@@ -88,16 +99,32 @@ public struct JSONResponse {
             throw NSError()
         }
 
-        let result = object["result"]
-        let error: JSONResponseError?
+        var response = JSONResponse(id: id)
+
+        response.result = object["result"]
         if let rawError = object["error"],
            let encodedError = try? JSONSerialization.data(withJSONObject: rawError, options: []) {
-            error = try JSONDecoder().decode(JSONResponseError.self, from: encodedError)
-        } else {
-            error = nil
+            response.error = try JSONDecoder().decode(JSONResponseError.self, from: encodedError)
         }
 
-        return JSONResponse(result: result, error: error, id: id)
+        return response
+    }
+
+    enum Keys: CodingKey {
+        case result
+        case error
+        case id
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: Keys.self)
+        try container.encode(id, forKey: .id)
+        if let result {
+            try container.encode(AnyEncodable(result), forKey: .result)
+        }
+        if let error {
+            try container.encode(error, forKey: .error)
+        }
     }
 }
 
