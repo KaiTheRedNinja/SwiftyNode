@@ -137,9 +137,12 @@ export class SwiftCommunicator {
       }
     }
   }
-  
-  sendRequest(request) {
-    this.client.write(JSON.stringify(request));
+
+  notify(method, params) {
+    this.write(JSON.stringify({
+      method: method,
+      params: params
+    }));
   }
   
   write(data) {

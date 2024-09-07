@@ -54,7 +54,6 @@ public struct JSONRequest: Encodable {
         guard let object = object as? [String: Any],
               let method = object["method"] as? String
         else {
-            print("Could not parse top level JSON")
             throw JSONError.invalidJson
         }
 
@@ -95,7 +94,6 @@ public struct JSONResponse: Encodable {
               let id = object["id"] as? String,
               UUID(uuidString: id) != nil
         else {
-            print("Could not parse top level JSON")
             throw JSONError.invalidJson
         }
 

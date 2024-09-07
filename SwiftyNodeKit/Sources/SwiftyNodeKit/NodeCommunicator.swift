@@ -73,8 +73,6 @@ public class NodeCommunicator {
 
         let result: R? = try await withCheckedThrowingContinuation { cont in
             callResponses[id] = { response in
-                print("Response yes")
-
                 defer {
                     self.callResponses.removeValue(forKey: id)
                 }
@@ -98,7 +96,7 @@ public class NodeCommunicator {
     /// - Parameters:
     ///   - methodName: The name of the method
     ///   - method: A callback closure, called when NodeJS requests the function.
-    func register(methodName: String, _ method: @escaping NativeFunction) {
+    public func register(methodName: String, _ method: @escaping NativeFunction) {
         self.nativeFunctions[methodName] = method
     }
 
@@ -131,15 +129,18 @@ public class NodeCommunicator {
     private func processChunk(_ chunk: String) {
         print("Chunk: \(chunk)")
         let data = chunk.data(using: .utf8)!
-        do {
-            let result = try JSONResponse.decode(from: data)
+
+        if let request = try? JSONRequest.decode(from: data) {
+            let result = nativeFunctions[request.method]?(request.params)
+            // TODO: send response
+        } else if let result = try? JSONResponse.decode(from: data) {
             guard let uuid = UUID(uuidString: result.id) else {
                 print("Response has invalid UUID")
                 return
             }
             callResponses[uuid]?(result)
-        } catch {
-            print("Error parsing response: \(error)")
+        } else {
+            print("Chunk was neither a request or response")
         }
     }
 

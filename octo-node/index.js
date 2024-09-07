@@ -18,6 +18,11 @@ communicator.registerFunction('githubListForOrg', (params) => {
     });
 });
 
+communicator.registerFunction('echo', (params) => {
+  communicator.notify('echo', params);
+  return Promise.resolve();
+});
+
 process.on('SIGINT', () => {
   communicator.terminate();
   process.exit();

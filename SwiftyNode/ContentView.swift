@@ -31,34 +31,51 @@ struct ContentView: View {
                     }
                 }
                 TextField("Github org:", text: $githubOrg)
-                Button("Request") {
-                    Task {
-                        let result = try await communicator.request(
-                            method: "githubListForOrg",
-                            params: ["orgName": githubOrg],
-                            returns: [String].self
-                        )
 
-                        moduleOutput = result?.joined(separator: "\n") ?? "something went wrong"
-                    }
-                }
-
-                Button("Stress test") {
-                    Task {
-                        do {
-                            for index in 0..<5 {
-                                _ = try await communicator.notify(
-                                    method: "t\(index)",
-                                    params: nil
-                                )
-                            }
-                            try await communicator.request(
-                                method: String(repeating: "t", count: 10_000),
-                                params: nil,
-                                returns: Void.self
+                HStack {
+                    Button("Request") {
+                        Task {
+                            let result = try await communicator.request(
+                                method: "githubListForOrg",
+                                params: ["orgName": githubOrg],
+                                returns: [String].self
                             )
-                        } catch {
-                            print("STRESS TEST ERROR: \(error)")
+
+                            moduleOutput = result?.joined(separator: "\n") ?? "something went wrong"
+                        }
+                    }
+
+                    Button("Stress test") {
+                        Task {
+                            do {
+                                for index in 0..<5 {
+                                    _ = try await communicator.notify(
+                                        method: "t\(index)",
+                                        params: nil
+                                    )
+                                }
+                                try await communicator.request(
+                                    method: String(repeating: "t", count: 10_000),
+                                    params: nil,
+                                    returns: Void.self
+                                )
+                            } catch {
+                                print("STRESS TEST ERROR: \(error)")
+                            }
+                        }
+                    }
+
+                    Button("Echo") {
+                        Task {
+                            do {
+                                try await communicator.request(
+                                    method: "echo",
+                                    params: ["test": 300],
+                                    returns: Void.self
+                                )
+                            } catch {
+                                print("ECHO ERROR: \(error)")
+                            }
                         }
                     }
                 }
@@ -74,6 +91,10 @@ struct ContentView: View {
                         let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
                         do {
                             communicator = try await interface.runModule()
+                            await communicator?.register(methodName: "echo") { params in
+                                print("Node echoed: \(params ?? [:])")
+                                return nil
+                            }
                         } catch {
                             moduleOutput = "Module Error: \(error)"
                         }
