@@ -10,7 +10,6 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-import Log
 import SwiftyNodeKit
 
 public struct NodeMethodGroupMacro: PeerMacro {
@@ -113,11 +112,4 @@ public struct NodeMethodGroupMacro: PeerMacro {
         }
         .public()
     }
-}
-
-@main
-struct NodeMacroPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        NodeMethodGroupMacro.self,
-    ]
 }

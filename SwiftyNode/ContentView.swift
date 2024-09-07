@@ -12,7 +12,16 @@ import Log
 import NodeMacro
 
 @NodeMethodGroup
-protocol GithubAPI {
+private protocol GithubAPI {
+    func doSomething() async throws -> String?
+
+    func listForOrg(org orgName: String) async throws -> [String]?
+}
+
+@NativeMethodGroup
+protocol UserInfoAPI: NativeMethodGroupProtocol {
+    func doSomething() async throws -> String?
+
     func listForOrg(org orgName: String) async throws -> [String]?
 }
 

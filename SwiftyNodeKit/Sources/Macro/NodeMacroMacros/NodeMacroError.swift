@@ -15,12 +15,22 @@ struct NodeMacroError: Error, CustomStringConvertible {
     }
 
     static let notProtocol = NodeMacroError(
-        description: "NodeMethodGroup must be attached to a Protocol."
+        description: "This macro must be attached to a Protocol."
+    )
+    static let notConform = NodeMacroError(
+        description: "The attached protocol must conform to the NativeMethodGroupProtocol protocol."
     )
     static let notAsyncThrows = NodeMacroError(
-        description: "Every function in the attached protocol must have `async throws`."
+        description: "Every function in the NodeMethodGroup's attached protocol must have `async throws`."
+    )
+    static let notAsync = NodeMacroError(
+        description: "Every function in the NativeMethodGroup's attached protocol must have `async`."
     )
     static let notOptional = NodeMacroError(
-        description: "Every function's return type must be Void or an Optional."
+        description: "Every NodeMethodGroup function's return type must be Void or an Optional."
     )
+
+    static func custom(_ description: String) -> Self {
+        .init(description: description)
+    }
 }

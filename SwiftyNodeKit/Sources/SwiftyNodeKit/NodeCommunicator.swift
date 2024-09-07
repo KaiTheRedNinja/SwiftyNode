@@ -203,3 +203,10 @@ extension NodeCommunicator: SocketDelegate {
         }
     }
 }
+
+// Note: this is used in the NodeMacro system. It is included here because I need to import it somehow.
+/// A protocol outlining a native method group
+public protocol NativeMethodGroupProtocol {
+    /// Registers all the functions in the protocol with a communicator
+    func registerWithCommunicator(_ communicator: NodeCommunicator)
+}
