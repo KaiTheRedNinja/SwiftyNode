@@ -83,68 +83,25 @@ export class SwiftCommunicator {
     });
   }
 
-  registerFunction(name, callback) {
-    this.functions.set(name, callback);
-  }
-  
-  terminate() {
-    this.client.end();
-  }
-  
-  processChunk(content) {
-    let message = JSON.parse(content);
-    let method = message.method;
-    let params = message.params;
-    let id = message.id;
-
-    console.log("Calling method: ", method);
-
-    // if message has an id, we need to send a response
-    if (id) {
-      if (this.functions.has(method)) {
-        this.functions.get(method)(params, )
-          .then((result) => {
-            this.write(JSON.stringify({
-              id: id,
-              result: result
-            }));
-          })
-          .catch((error) => {
-            this.write(JSON.stringify({
-              id: id,
-              error: {
-                code: -32000,
-                message: error.message
-              }
-            }));
-          });
-      } else {
-        console.error("Call method not found: ", method);
-        this.write(JSON.stringify({
-          id: id,
-          error: {
-            code: -32601,
-            message: "Method not found"
-          }
-        }));
-      }
-    } else {
-      // just call the method without sending a response
-      if (this.functions.has(method)) {
-        this.functions.get(method)(params);
-      } else {
-        console.error("Notification method not found: ", method);
-      }
-    }
-  }
-
   notify(method, params) {
     this.write(JSON.stringify({
       method: method,
       params: params
     }));
   }
-  
+
+  request(method, params) {
+    // TODO: implement this
+  }
+
+  register(name, callback) {
+    this.functions.set(name, callback);
+  }
+
+  terminate() {
+    this.client.end();
+  }
+
   write(data) {
     // generate a random id between 0 and 10_000
     const id = Math.floor(Math.random() * 10_000);
@@ -155,5 +112,51 @@ export class SwiftCommunicator {
         this.mutex.unlock();
       });
     });
+  }
+  
+  processChunk(content) {
+    let message = JSON.parse(content);
+    let method = message.method;
+    let params = message.params;
+    let id = message.id;
+
+    console.log("Calling method: ", method);
+
+    // determine if the method exists, send an error back if the method is not found
+    if (!this.functions.has(method)) {
+      console.error("Method not found: ", method);
+      this.write(JSON.stringify({
+        id: id,
+        error: {
+          code: -32601,
+          message: "Method not found"
+        }
+      }));
+      return
+    }
+
+    // call the method
+    let call = this.functions.get(method)(params, )
+
+    // if message has an id, we need to send a response
+    if (id) {
+      call
+        .then((result) => {
+          this.write(JSON.stringify({
+            id: id,
+            result: result
+          }));
+        })
+        .catch((error) => {
+          this.write(JSON.stringify({
+            id: id,
+            error: {
+              code: -32000,
+              message: error.message
+            }
+          }));
+        });
+    }
+    // else, just call the method without sending a response. No extra work to be done.
   }
 }

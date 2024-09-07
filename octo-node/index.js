@@ -5,7 +5,7 @@ const octokit = new Octokit();
 
 const communicator = new SwiftCommunicator(process.argv[2]);
 
-communicator.registerFunction('githubListForOrg', (params) => {
+communicator.register('githubListForOrg', (params) => {
   let orgName = params.orgName;
   
   return octokit.rest.repos
@@ -18,7 +18,7 @@ communicator.registerFunction('githubListForOrg', (params) => {
     });
 });
 
-communicator.registerFunction('echo', (params) => {
+communicator.register('echo', (params) => {
   communicator.notify('echo', params);
   return Promise.resolve();
 });

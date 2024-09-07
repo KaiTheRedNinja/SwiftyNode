@@ -124,6 +124,12 @@ public class NodeCommunicator {
         sendQueue = []
     }
 
+    /// Terminates the process and socket
+    public func terminate() {
+        process?.process.terminate()
+        socket?.stopBroadcasting()
+    }
+
     /// Processes a received chunk, sent from the NodeJS process.
     /// - Parameter chunk: The complete message chunk
     private func processChunk(_ chunk: String) {
@@ -142,12 +148,6 @@ public class NodeCommunicator {
         } else {
             print("Chunk was neither a request or response")
         }
-    }
-
-    /// Terminates the process and socket
-    public func terminate() {
-        process?.process.terminate()
-        socket?.stopBroadcasting()
     }
 
     /// Reads from the process's console. This function will cause the caller to hang if the
