@@ -9,6 +9,13 @@ import SwiftUI
 import SwiftyNodeKit
 import Log
 
+import NodeMacro
+
+@NodeMethodGroup
+protocol GithubAPI {
+    func listForOrg(org orgName: String) async throws -> [String]?
+}
+
 struct ContentView: View {
     @AppStorage("moduleLocation")
     var moduleLocation: String = ""

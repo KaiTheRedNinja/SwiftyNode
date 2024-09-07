@@ -8,12 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		937A9E1B2C8C2A5C00EF9A41 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 937A9E1A2C8C2A5C00EF9A41 /* README.md */; };
+		937A9E2B2C8C420400EF9A41 /* NodeMacro in Resources */ = {isa = PBXBuildFile; fileRef = 937A9E2A2C8C420400EF9A41 /* NodeMacro */; };
+		93EDDE672C8C48310054FCCC /* NodeMacro in Frameworks */ = {isa = PBXBuildFile; productRef = 93EDDE662C8C48310054FCCC /* NodeMacro */; };
 		93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */ = {isa = PBXBuildFile; fileRef = 93F654EB2C89D316007847D1 /* SwiftyNodeKit */; };
 		93F654EF2C89D457007847D1 /* SwiftyNodeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 93F654EE2C89D457007847D1 /* SwiftyNodeKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		937A9E1A2C8C2A5C00EF9A41 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		937A9E2A2C8C420400EF9A41 /* NodeMacro */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NodeMacro; sourceTree = "<group>"; };
 		93F654D82C89B291007847D1 /* SwiftyNode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyNode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93F654EB2C89D316007847D1 /* SwiftyNodeKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = SwiftyNodeKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -32,6 +35,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93F654EF2C89D457007847D1 /* SwiftyNodeKit in Frameworks */,
+				93EDDE672C8C48310054FCCC /* NodeMacro in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,6 +45,7 @@
 		93F654CF2C89B291007847D1 = {
 			isa = PBXGroup;
 			children = (
+				937A9E2A2C8C420400EF9A41 /* NodeMacro */,
 				93F654EB2C89D316007847D1 /* SwiftyNodeKit */,
 				93F654DA2C89B291007847D1 /* SwiftyNode */,
 				93F654ED2C89D457007847D1 /* Frameworks */,
@@ -86,6 +91,7 @@
 			name = SwiftyNode;
 			packageProductDependencies = (
 				93F654EE2C89D457007847D1 /* SwiftyNodeKit */,
+				93EDDE662C8C48310054FCCC /* NodeMacro */,
 			);
 			productName = SwiftyNode;
 			productReference = 93F654D82C89B291007847D1 /* SwiftyNode.app */;
@@ -132,6 +138,7 @@
 			files = (
 				937A9E1B2C8C2A5C00EF9A41 /* README.md in Resources */,
 				93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */,
+				937A9E2B2C8C420400EF9A41 /* NodeMacro in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,6 +375,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		93EDDE662C8C48310054FCCC /* NodeMacro */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NodeMacro;
+		};
 		93F654EE2C89D457007847D1 /* SwiftyNodeKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftyNodeKit;
