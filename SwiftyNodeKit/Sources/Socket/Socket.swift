@@ -100,6 +100,7 @@ public class Socket {
                 let bytesRead = Darwin.read(socket, &buffer, buffer.count)
                 if bytesRead <= 0 {
                     Log.error("Error reading from socket or connection closed: \(bytesRead)")
+                    delegate?.socketDidDisconnect(self)
                     break // exit loop on error or closure of connection
                 }
 
@@ -122,12 +123,14 @@ public class Socket {
             close(socket)
         }
         unlink(socketPath)
+        delegate?.socketDidDisconnect(self)
         Log.log("Broadcasting stopped.")
     }
 }
 
 public protocol SocketDelegate: AnyObject {
     func socketDidConnect(_ socket: Socket)
+    func socketDidDisconnect(_ socket: Socket)
     func socketDidRead(_ socket: Socket, data: Data)
 }
 

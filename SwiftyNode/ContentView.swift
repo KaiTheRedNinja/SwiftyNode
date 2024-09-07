@@ -14,6 +14,7 @@ struct ContentView: View {
     var moduleLocation: String = ""
     @AppStorage("githubOrg")
     var githubOrg: String = ""
+
     @State var communicator: NodeCommunicator?
     @State var moduleOutput: String = ""
 

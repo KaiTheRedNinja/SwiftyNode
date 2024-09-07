@@ -31,9 +31,8 @@ public class NodeInterface {
         try nodeRuntime.execute(moduleLocation.appendingPathComponent(targetFile))
     }
 
-    /// Runs the module using `node [path here]`, without waiting for it to finish.
-    ///
-    /// This function is not a suspending function.
+    /// Runs the module using `node [path here]`, without waiting for it to finish. It returns a
+    /// ``NodeCommunicator``, which can be used to communicate with the node runtime.
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
     public func runModule(targetFile: String = "index.js") async throws -> NodeCommunicator {

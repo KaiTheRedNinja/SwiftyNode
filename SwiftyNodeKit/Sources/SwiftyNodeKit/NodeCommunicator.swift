@@ -29,6 +29,9 @@ public class NodeCommunicator {
     /// A map of native functions to their names, which are called when the NodeJS process sends a method request
     internal var nativeFunctions: [String: NativeFunction] = [:]
 
+    /// Whether or not the process is active, as far as the ``NodeCommunicator`` is aware.
+    @Published public var processActive: Bool = true
+
     /// Creates an empty ``NodeCommunicator``
     public init() {}
 
@@ -129,6 +132,7 @@ public class NodeCommunicator {
     public func terminate() {
         process?.process.terminate()
         socket?.stopBroadcasting()
+        processActive = false
     }
 
     /// Processes a received chunk, sent from the NodeJS process.
@@ -140,7 +144,7 @@ public class NodeCommunicator {
         if let request = try? JSONRequest.decode(from: data) {
             let result = nativeFunctions[request.method]?(request.params) // TODO: allow throwing errors
             if let id = request.id {
-                Log.info("Sending response \(result) to \(id)")
+                Log.info("Sending response \(result.debugDescription) to \(id)")
                 let response = JSONResponse(result: result, id: id)
                 do {
                     let responseData = try JSONEncoder().encode(response)
@@ -176,6 +180,13 @@ public class NodeCommunicator {
 }
 
 extension NodeCommunicator: SocketDelegate {
+    public nonisolated func socketDidDisconnect(_ socket: Socket) {
+        Task { @NodeActor in
+            Log.log("Socket did disconnect!")
+            terminate()
+        }
+    }
+
     public nonisolated func socketDidConnect(_ socket: Socket) {
         Task { @NodeActor in
             // clear the queue
