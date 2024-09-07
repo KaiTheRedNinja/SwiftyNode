@@ -14,6 +14,7 @@ public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
 public class NodeCommunicator {
     internal var process: NodeProcess!
     internal var socket: Socket!
+    internal var assembler: ChunkAssembler!
     internal var sendQueue: [Data] = []
     internal var callResponses: [UUID: (JSONResponse) -> Void] = [:]
     internal var nativeFunctions: [String: NativeFunction] = [:]
@@ -26,6 +27,9 @@ public class NodeCommunicator {
         self.socket = Socket(socketPath: name)
         socket.delegate = self
         socket.startBroadcasting()
+        assembler = .init(chunkCallback: { [weak self] in
+            self?.processChunk($0)
+        })
         return name
     }
 
@@ -95,6 +99,11 @@ public class NodeCommunicator {
         sendQueue = []
     }
 
+    /// Processes a received chunk
+    private func processChunk(_ chunk: String) {
+        print("Chunk: \(chunk)")
+    }
+
     /// Terminates the process and socket
     public func terminate() {
         process?.process.terminate()
@@ -115,8 +124,8 @@ public class NodeCommunicator {
 }
 
 extension NodeCommunicator: SocketDelegate {
-    public func socketDidConnect(_ socket: Socket) {
-        Task {
+    public nonisolated func socketDidConnect(_ socket: Socket) {
+        Task { @NodeActor in
             // clear the queue
             for item in sendQueue {
                 try await socket.sendData(item)
@@ -124,20 +133,10 @@ extension NodeCommunicator: SocketDelegate {
             sendQueue = []
         }
     }
-    
-    public func socketDidRead(_ socket: Socket, data: Data) {
-        do {
-            let response = try JSONResponse.decode(from: data)
-            guard let uuid = UUID(uuidString: response.id) else {
-                print("Response does not have a valid UUID")
-                return
-            }
 
-            print("Response: \(response)")
-
-            callResponses[uuid]?(response)
-        } catch {
-            print("Error parsing JSON: \(error.localizedDescription)")
+    public nonisolated func socketDidRead(_ socket: Socket, data: Data) {
+        Task { @NodeActor in
+            assembler.processData(data)
         }
     }
 }

@@ -22,9 +22,11 @@ struct ContentView: View {
             TextField("Module location:", text: $moduleLocation)
             if let communicator {
                 Button("Terminate") {
-                    communicator.terminate()
-                    moduleOutput = communicator.readConsole()
-                    self.communicator = nil
+                    Task {
+                        await communicator.terminate()
+                        await moduleOutput = communicator.readConsole()
+                        self.communicator = nil
+                    }
                 }
                 TextField("Github org:", text: $githubOrg)
                 Button("Request") {
