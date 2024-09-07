@@ -66,7 +66,7 @@ public struct NodeMethodGroupMacro: PeerMacro {
             let type = param.type
 
             functionParameters.append("\(firstName)\(secondName): \(type)")
-            callParameters.append("\"\(param.firstName.text)\": \(param.secondName?.text ?? param.firstName.text)")
+            callParameters.append("\"\(firstName)\": \(param.secondName?.text ?? firstName)")
         }
 
         let functionReturnType = if let ret = function.returnType { " -> \(ret)" } else { "" }

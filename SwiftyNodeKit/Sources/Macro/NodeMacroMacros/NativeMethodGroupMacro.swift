@@ -54,13 +54,7 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
             ) {
                 Declaration("Task") {
                     for function in proto.functions {
-                        let funcName = function.name
-                    """
-                    await communicator.register(methodName: "\(funcName)") { params in
-                        // TODO: get the parameters
-                        return nil
-                    }
-                    """
+                        methodRegistration(for: function)
                     }
                 }
             }
@@ -72,5 +66,67 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
         }
 
         return [extensionDecl]
+    }
+
+    private static func methodRegistration(for function: FunctionDeclSyntax) -> [Declaration] {
+        let funcName = function.name
+
+        var declParameters: [String] = []
+        for param in function.parameters {
+            let firstName = param.firstName.text
+            let type = param.type
+
+            @DeclarationsBuilder
+            func getObject() -> [Declaration] {
+                """
+                    let \(firstName)Param: \(type) = if let param = params?[\"\(firstName)\"] as? \(type) {
+                        param
+                    } else {
+                """
+
+                if !type.is(OptionalTypeSyntax.self) {
+                    """
+                            throw JSONResponseError.invalidParams
+                    """
+                } else {
+                    """
+                            nil
+                    """
+                }
+
+                "    }\n"
+            }
+
+            declParameters.append(getObject().map { $0.formattedString() }.joined(separator: "\n"))
+        }
+
+        @DeclarationsBuilder
+        func registration() -> [Declaration] {
+            """
+            await communicator.register(methodName: "\(funcName)") { params in
+            """
+
+            for declParam in declParameters {
+                declParam
+            }
+
+            """
+                return try await \(funcName)(
+            """
+
+            let paramCount = function.parameters.count
+            for (index, declParam) in function.parameters.enumerated() {
+                let firstName = declParam.firstName.text
+                let trailingComma = if index < paramCount - 1 { "," } else { "" }
+                String(repeating: " ", count: 8) + "\(firstName): \(firstName)Param" + trailingComma
+            }
+
+            """
+                )
+            }
+            """
+        }
+
+        return registration()
     }
 }

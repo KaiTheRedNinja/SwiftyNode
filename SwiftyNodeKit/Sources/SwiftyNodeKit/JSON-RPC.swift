@@ -130,6 +130,11 @@ public struct JSONResponse: Encodable {
 public struct JSONResponseError: Error, Codable {
     public var code: Int
     public var message: String
+
+    public static let invalidParams: JSONResponseError = .init(
+        code: -32602,
+        message: "Invalid method parameter(s)."
+    )
 }
 
 /// An error in sending or receiving JSON response

@@ -22,7 +22,7 @@ private protocol GithubAPI {
 protocol UserInfoAPI: NativeMethodGroupProtocol {
     func doSomething() async throws -> String?
 
-    func listForOrg(org orgName: String) async throws -> [String]?
+    func listForOrg(org orgName: String, option: Int?) async throws -> [String]?
 }
 
 struct ContentView: View {

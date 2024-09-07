@@ -23,9 +23,6 @@ struct NodeMacroError: Error, CustomStringConvertible {
     static let notAsyncThrows = NodeMacroError(
         description: "Every function in the NodeMethodGroup's attached protocol must have `async throws`."
     )
-    static let notAsync = NodeMacroError(
-        description: "Every function in the NativeMethodGroup's attached protocol must have `async`."
-    )
     static let notOptional = NodeMacroError(
         description: "Every NodeMethodGroup function's return type must be Void or an Optional."
     )
