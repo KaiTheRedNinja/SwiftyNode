@@ -44,7 +44,7 @@ public class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function request via the socket
-    public func request<R>(method: String, params: [String: any Encodable], returns: R.Type) async throws -> R? {
+    public func request<R>(method: String, params: [String: any Encodable]?, returns: R.Type) async throws -> R? {
         let id: UUID = UUID()
         let request = JSONRequest(method: method, params: params, id: id.uuidString)
         let data = try JSONEncoder().encode(request)
@@ -102,6 +102,17 @@ public class NodeCommunicator {
     /// Processes a received chunk
     private func processChunk(_ chunk: String) {
         print("Chunk: \(chunk)")
+        let data = chunk.data(using: .utf8)!
+        do {
+            let result = try JSONResponse.decode(from: data)
+            guard let uuid = UUID(uuidString: result.id) else {
+                print("Response has invalid UUID")
+                return
+            }
+            callResponses[uuid]?(result)
+        } catch {
+            print("Error parsing response: \(error)")
+        }
     }
 
     /// Terminates the process and socket

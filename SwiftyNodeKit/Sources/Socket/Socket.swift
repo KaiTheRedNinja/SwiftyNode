@@ -45,6 +45,7 @@ public class Socket {
             throw SocketError.noData
         }
 
+        // Darwin.send has a send limit of around 8192 bytes, on my machine. I'm treating it as 4096 to be safe.
         let chunkSize = 4096
         var offset = 0
 

@@ -34,29 +34,30 @@ struct ContentView: View {
                         let result = try await communicator.request(
                             method: "githubListForOrg",
                             params: ["orgName": githubOrg],
-                            returns: Any.self
+                            returns: [String].self
                         )
 
-                        guard let result = result as? [String] else {
-                            return
-                        }
-
-                        moduleOutput = result.joined(separator: "\n")
+                        moduleOutput = result?.joined(separator: "\n") ?? "something went wrong"
                     }
                 }
 
-                Button("Stress test") { // NOTE: the limit seems to be around 8192 bytes. I'm treating it as 4096 to be safe.
+                Button("Stress test") {
                     Task {
-                        for i in 0..<5 {
-                            _ = try await communicator.notify(
-                                method: "t\(i)",
-                                params: nil
+                        do {
+                            for i in 0..<5 {
+                                _ = try await communicator.notify(
+                                    method: "t\(i)",
+                                    params: nil
+                                )
+                            }
+                            try await communicator.request(
+                                method: String(repeating: "t", count: 10_000),
+                                params: nil,
+                                returns: Void.self
                             )
+                        } catch {
+                            print("STRESS TEST ERROR: \(error)")
                         }
-                        try await communicator.notify(
-                            method: String(repeating: "t", count: 10_000),
-                            params: nil
-                        )
                     }
                 }
             } else {
