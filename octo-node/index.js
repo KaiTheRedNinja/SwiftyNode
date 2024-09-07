@@ -18,8 +18,11 @@ communicator.register('githubListForOrg', (params) => {
     });
 });
 
-communicator.register('echo', (params) => {
-  communicator.notify('echo', params);
+communicator.register('nodeEcho', (params) => {
+  communicator.request('swiftEcho', params)
+    .then((response) => {
+      console.log('Echo response from Swift:', response);
+    });
   return Promise.resolve();
 });
 

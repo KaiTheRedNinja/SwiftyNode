@@ -69,7 +69,7 @@ struct ContentView: View {
                         Task {
                             do {
                                 try await communicator.request(
-                                    method: "echo",
+                                    method: "nodeEcho",
                                     params: ["test": 300],
                                     returns: Void.self
                                 )
@@ -91,9 +91,9 @@ struct ContentView: View {
                         let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
                         do {
                             communicator = try await interface.runModule()
-                            await communicator?.register(methodName: "echo") { params in
+                            await communicator?.register(methodName: "swiftEcho") { params in
                                 print("Node echoed: \(params ?? [:])")
-                                return nil
+                                return "it was echoed :)"
                             }
                         } catch {
                             moduleOutput = "Module Error: \(error)"

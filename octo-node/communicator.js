@@ -1,4 +1,5 @@
 import net from 'net';
+import { v4 as uuidv4 } from 'uuid';
 
 class ChunkAssembler {
   constructor(chunkCallback) {
@@ -62,6 +63,7 @@ export class SwiftCommunicator {
   constructor(socketPath) {
     this.socketPath = socketPath;
     this.mutex = new Mutex();
+    this.callResponses = new Map();
     this.functions = new Map();
     this.assembler = new ChunkAssembler((content) => {
       this.processChunk(content);
@@ -91,7 +93,19 @@ export class SwiftCommunicator {
   }
 
   request(method, params) {
-    // TODO: implement this
+    const id = uuidv4();
+    this.write(JSON.stringify({
+      method: method,
+      params: params,
+      id: id,
+    }));
+
+    return new Promise((resolve, reject) => {
+      // store the resolve and reject functions in the callResponses map, with the id as the key
+      this.callResponses.set(id, { resolve, reject });
+
+      console.log(`Promise created for id: ${id}`);
+    });
   }
 
   register(name, callback) {
@@ -115,11 +129,22 @@ export class SwiftCommunicator {
   }
   
   processChunk(content) {
+    console.log("Got chunk: ", content);
     let message = JSON.parse(content);
     let method = message.method;
-    let params = message.params;
     let id = message.id;
 
+    if (method) { // request by swift for node to process
+      let params = message.params;
+      this.processRequest(method, params, id);
+    } else { // response from swift to node
+      let result = message.result;
+      let error = message.error;
+      this.processResponse(result, error, id);
+    }
+  }
+
+  processRequest(method, params, id) {
     console.log("Calling method: ", method);
 
     // determine if the method exists, send an error back if the method is not found
@@ -158,5 +183,21 @@ export class SwiftCommunicator {
         });
     }
     // else, just call the method without sending a response. No extra work to be done.
+  }
+
+  processResponse(result, error, id) {
+    console.log(`Processing response for id: ${id}: ${result}`);
+
+    let promise = this.callResponses.get(id);
+
+    if (promise) {
+      if (error) {
+        promise.reject(error);
+      } else {
+        promise.resolve(result);
+      }
+
+      this.callResponses.delete(id);
+    }
   }
 }

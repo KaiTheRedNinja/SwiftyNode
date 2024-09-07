@@ -137,8 +137,19 @@ public class NodeCommunicator {
         let data = chunk.data(using: .utf8)!
 
         if let request = try? JSONRequest.decode(from: data) {
-            let result = nativeFunctions[request.method]?(request.params)
-            // TODO: send response
+            let result = nativeFunctions[request.method]?(request.params) // TODO: allow throwing errors
+            if let id = request.id {
+                print("Sending response \(result) to \(id)")
+                let response = JSONResponse(result: result, id: id)
+                do {
+                    let responseData = try JSONEncoder().encode(response)
+                    Task {
+                        try await send(responseData)
+                    }
+                } catch {
+                    print("Error sending response: \(error)")
+                }
+            }
         } else if let result = try? JSONResponse.decode(from: data) {
             guard let uuid = UUID(uuidString: result.id) else {
                 print("Response has invalid UUID")

@@ -153,6 +153,14 @@ public struct AnyEncodable: Encodable {
 
         var container = encoder.singleValueContainer()
         switch value {
+        case let intValue as Int:
+            try container.encode(intValue)
+        case let doubleValue as Double:
+            try container.encode(doubleValue)
+        case let boolValue as Bool:
+            try container.encode(boolValue)
+        case let stringValue as String:
+            try container.encode(stringValue)
         case let arrayValue as [Any]:
             try container.encode(arrayValue.map { AnyEncodable($0) })
         case let dictionaryValue as [String: Any]:
