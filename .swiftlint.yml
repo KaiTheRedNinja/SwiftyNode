@@ -2,9 +2,6 @@ disabled_rules:
   - todo
   - trailing_comma
   - nesting
-#  - cyclomatic_complexity
-#  - type_body_length
-#  - function_body_length
   - force_cast
 
 type_name:
@@ -28,7 +25,6 @@ opt_in_rules:
   - closure_spacing
   - contains_over_first_not_nil
   - missing_docs
-#  - implicit_return
   - modifier_order
   - convenience_type
   - pattern_matching_keywords
@@ -44,10 +40,10 @@ custom_rules:
     severity: warning
 
   # Don't use print
-#  disallow_print:
-#    included: ".*.swift"
-#    name: "No print"
-#    # print is defined as any "print(" preceeded by anything other than whitespace
-#    regex: "^\\s*print\\("
-#    message: "Please do not use print(), use OSLog's `Logger`"
-#    severity: warning
+  disallow_print:
+    included: ".*.swift"
+    name: "No print"
+    # print is defined as any "print(" preceeded by anything other than whitespace
+    regex: "^\\s*print\\("
+    message: "Please do not use print(), use Log's `Log`"
+    severity: warning

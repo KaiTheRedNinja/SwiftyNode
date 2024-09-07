@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftyNodeKit
+import Log
 
 struct ContentView: View {
     @AppStorage("moduleLocation")
@@ -60,7 +61,7 @@ struct ContentView: View {
                                     returns: Void.self
                                 )
                             } catch {
-                                print("STRESS TEST ERROR: \(error)")
+                                Log.error("STRESS TEST ERROR: \(error)")
                             }
                         }
                     }
@@ -74,7 +75,7 @@ struct ContentView: View {
                                     returns: Void.self
                                 )
                             } catch {
-                                print("ECHO ERROR: \(error)")
+                                Log.error("ECHO ERROR: \(error)")
                             }
                         }
                     }
@@ -92,7 +93,7 @@ struct ContentView: View {
                         do {
                             communicator = try await interface.runModule()
                             await communicator?.register(methodName: "swiftEcho") { params in
-                                print("Node echoed: \(params ?? [:])")
+                                Log.info("Node echoed: \(params ?? [:])")
                                 return "it was echoed :)"
                             }
                         } catch {

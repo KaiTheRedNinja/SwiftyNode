@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Log
 
 class ChunkAssembler {
     private var buffer: String = ""
@@ -20,7 +21,7 @@ class ChunkAssembler {
             buffer += newString
             extractChunks()
         } else {
-            print("Error: Unable to decode data as UTF-8")
+            Log.error("Unable to decode data as UTF-8")
         }
     }
 

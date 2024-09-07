@@ -7,16 +7,17 @@
 
 import Foundation
 import Darwin
+import Log
 
 public extension Socket {
     /// Creates a socket for communication.
     internal func createSocket() {
         socket = Darwin.socket(AF_UNIX, SOCK_STREAM, 0)
         guard socket != nil, socket != -1 else {
-            logError("Error creating socket")
+            Log.error("Error creating socket")
             return
         }
-        log("Socket created successfully")
+        Log.log("Socket created successfully")
     }
 
     /// Binds the created socket to a specific address.
@@ -38,10 +39,10 @@ public extension Socket {
             withUnsafePointer(to: &address, { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { $0 } }),
             socklen_t(MemoryLayout<sockaddr_un>.size)
         ) == -1 {
-            logError("Error binding socket - \(String(cString: strerror(errno)))")
+            Log.error("Error binding socket - \(String(cString: strerror(errno)))")
             return
         }
-        log("Binding to socket path: \(socketPath)")
+        Log.info("Binding to socket path: \(socketPath)")
     }
 
     /// Listens for connections on the bound socket.
@@ -49,10 +50,10 @@ public extension Socket {
         guard let socket = socket else { return }
 
         if Darwin.listen(socket, 1) == -1 {
-            logError("Error listening on socket - \(String(cString: strerror(errno)))")
+            Log.error("Error listening on socket - \(String(cString: strerror(errno)))")
             return
         }
-        log("Listening for connections...")
+        Log.log("Listening for connections...")
     }
 
     /// Waits for a connection and accepts it when available.
@@ -79,10 +80,10 @@ public extension Socket {
         )
 
         if clientSocket == -1 {
-            logError("Error accepting connection - \(String(cString: strerror(errno)))")
+            Log.error("Error accepting connection - \(String(cString: strerror(errno)))")
             return
         }
-        log("Connection accepted!")
+        Log.log("Connection accepted!")
         delegate?.socketDidConnect(self)
     }
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Socket
+import Log
 
 /// Type alias for a native function callback closure
 public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
@@ -78,13 +79,13 @@ public class NodeCommunicator {
                 }
 
                 if let error = response.error {
-                    print("Returning error")
+                    Log.error("Returning error")
                     cont.resume(throwing: error)
                     return
                 }
 
                 let result = response.result as? R
-                print("Resuming")
+                Log.log("Resuming")
                 cont.resume(returning: result)
             }
         }
@@ -114,7 +115,7 @@ public class NodeCommunicator {
         let markedData = "[START: \(id)]".data(using: .utf8)! + data + "[END: \(id)]".data(using: .utf8)!
         sendQueue.append(markedData)
         guard socket.isConnected else {
-            print("Socket not connected")
+            Log.error("Socket not connected")
             return
         }
 
@@ -133,13 +134,13 @@ public class NodeCommunicator {
     /// Processes a received chunk, sent from the NodeJS process.
     /// - Parameter chunk: The complete message chunk
     private func processChunk(_ chunk: String) {
-        print("Chunk: \(chunk)")
+        Log.info("Chunk: \(chunk)")
         let data = chunk.data(using: .utf8)!
 
         if let request = try? JSONRequest.decode(from: data) {
             let result = nativeFunctions[request.method]?(request.params) // TODO: allow throwing errors
             if let id = request.id {
-                print("Sending response \(result) to \(id)")
+                Log.info("Sending response \(result) to \(id)")
                 let response = JSONResponse(result: result, id: id)
                 do {
                     let responseData = try JSONEncoder().encode(response)
@@ -147,17 +148,17 @@ public class NodeCommunicator {
                         try await send(responseData)
                     }
                 } catch {
-                    print("Error sending response: \(error)")
+                    Log.error("Error sending response: \(error)")
                 }
             }
         } else if let result = try? JSONResponse.decode(from: data) {
             guard let uuid = UUID(uuidString: result.id) else {
-                print("Response has invalid UUID")
+                Log.error("Response has invalid UUID")
                 return
             }
             callResponses[uuid]?(result)
         } else {
-            print("Chunk was neither a request or response")
+            Log.error("Chunk was neither a request or response")
         }
     }
 

@@ -7,6 +7,7 @@
 
 import Foundation
 import Darwin
+import Log
 
 /// A class that manages a Unix Domain Socket connection
 public class Socket {
@@ -45,12 +46,12 @@ public class Socket {
     /// - Parameter data: The data to send.
     public func sendData(_ data: Data) async throws {
         guard let clientSocket = clientSocket else {
-            logError("No connected client.")
+            Log.log("No connected client.")
             throw SocketError.clientNotConnected
         }
 
         if data.isEmpty {
-            logError("No data to send!")
+            Log.error("No data to send!")
             throw SocketError.noData
         }
 
@@ -71,11 +72,11 @@ public class Socket {
                     let bytesWritten = Darwin.send(clientSocket, pointer.baseAddress!, chunk.count, 0)
 
                     if bytesWritten == -1 {
-                        logError("Error sending data: \(bytesWritten)")
+                        Log.error("Error sending data: \(bytesWritten)")
                         cont.resume(throwing: SocketError.sendFailed)
                         return
                     }
-                    log("\(bytesWritten) bytes written out of \(chunk.count) bytes")
+                    Log.info("\(bytesWritten) bytes written out of \(chunk.count) bytes")
                     cont.resume()
                 }
             }
@@ -92,19 +93,19 @@ public class Socket {
             while true {
                 var buffer = [UInt8](repeating: 0, count: 1024)
                 guard let socket = self.clientSocket else {
-                    self.logError("Socket is nil")
+                    Log.error("Socket is nil")
                     return
                 }
 
                 let bytesRead = Darwin.read(socket, &buffer, buffer.count)
                 if bytesRead <= 0 {
-                    self.logError("Error reading from socket or connection closed: \(bytesRead)")
+                    Log.error("Error reading from socket or connection closed: \(bytesRead)")
                     break // exit loop on error or closure of connection
                 }
 
                 // Print the data for debugging purposes
                 let data = Data(buffer[..<bytesRead])
-                self.log("Received data: \(data)")
+                Log.info("Received data: \(data)")
                 self.delegate?.socketDidRead(self, data: data)
             }
         }
@@ -113,27 +114,15 @@ public class Socket {
     /// Stops the server and closes any open connections.
     public func stopBroadcasting() {
         if let clientSocket = clientSocket {
-            log("Closing client socket...")
+            Log.log("Closing client socket...")
             close(clientSocket)
         }
         if let socket = socket {
-            log("Closing server socket...")
+            Log.log("Closing server socket...")
             close(socket)
         }
         unlink(socketPath)
-        log("Broadcasting stopped.")
-    }
-
-    /// Logs a success message.
-    /// - Parameter message: The message to log.
-    internal func log(_ message: String) {
-        print("ServerUnixSocket: \(message)")
-    }
-
-    /// Logs an error message.
-    /// - Parameter message: The message to log.
-    internal func logError(_ message: String) {
-        print("ServerUnixSocket: [ERROR] \(message)")
+        Log.log("Broadcasting stopped.")
     }
 }
 
