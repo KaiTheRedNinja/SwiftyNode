@@ -1,6 +1,6 @@
 //
 //  Declaration.swift
-//  NodeMacro
+//  SwiftyNodeKit
 //
 //  Created by Kai Quan Tay on 7/9/24.
 //
