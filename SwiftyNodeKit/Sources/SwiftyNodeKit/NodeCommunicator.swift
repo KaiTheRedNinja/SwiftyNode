@@ -10,7 +10,7 @@ import Socket
 import Log
 
 /// Type alias for a native function callback closure
-public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
+public typealias NativeFunction = (_ params: [String: Any]?) async throws -> (any Codable)?
 
 /// A class that manages communication with a NodeJS instance.
 @NodeActor
@@ -142,10 +142,30 @@ public class NodeCommunicator {
         let data = chunk.data(using: .utf8)!
 
         if let request = try? JSONRequest.decode(from: data) {
-            let result = nativeFunctions[request.method]?(request.params) // TODO: allow throwing errors
-            if let id = request.id {
-                Log.info("Sending response \(result.debugDescription) to \(id)")
-                let response = JSONResponse(result: result, id: id)
+            Task {
+                var response: JSONResponse?
+                do {
+                    let result = try await nativeFunctions[request.method]?(request.params)
+                    if let id = request.id {
+                        Log.info("Sending response \(result.debugDescription) to \(id)")
+                        response = JSONResponse(result: result, id: id)
+
+                    }
+                } catch {
+                    if let id = request.id {
+                        Log.info("Sending function failure \(error.localizedDescription) to \(id)")
+                        response = JSONResponse(
+                            error: .init(
+                                code: -32000,
+                                message: error.localizedDescription
+                            ),
+                            id: id
+                        )
+                    }
+                }
+
+                guard let response else { return } // no need to send a response
+
                 do {
                     let responseData = try JSONEncoder().encode(response)
                     Task {
