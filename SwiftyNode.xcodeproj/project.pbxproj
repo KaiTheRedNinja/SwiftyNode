@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		937A9E1B2C8C2A5C00EF9A41 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 937A9E1A2C8C2A5C00EF9A41 /* README.md */; };
 		93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */ = {isa = PBXBuildFile; fileRef = 93F654EB2C89D316007847D1 /* SwiftyNodeKit */; };
 		93F654EF2C89D457007847D1 /* SwiftyNodeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 93F654EE2C89D457007847D1 /* SwiftyNodeKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		937A9E1A2C8C2A5C00EF9A41 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		93F654D82C89B291007847D1 /* SwiftyNode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftyNode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93F654EB2C89D316007847D1 /* SwiftyNodeKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = SwiftyNodeKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -43,6 +45,7 @@
 				93F654DA2C89B291007847D1 /* SwiftyNode */,
 				93F654ED2C89D457007847D1 /* Frameworks */,
 				93F654D92C89B291007847D1 /* Products */,
+				937A9E1A2C8C2A5C00EF9A41 /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -127,6 +130,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				937A9E1B2C8C2A5C00EF9A41 /* README.md in Resources */,
 				93F654EC2C89D316007847D1 /* SwiftyNodeKit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
