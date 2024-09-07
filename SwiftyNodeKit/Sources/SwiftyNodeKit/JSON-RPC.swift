@@ -19,7 +19,7 @@ public struct JSONRequest: Encodable {
     public var id: String?
 
     /// Creates a JSON Request
-    public init(method: String, params: [String : any Encodable]? = nil, id: String? = nil) {
+    public init(method: String, params: [String: any Encodable]? = nil, id: String? = nil) {
         self.method = method
         self.params = params
         self.id = id
@@ -55,7 +55,7 @@ public struct JSONRequest: Encodable {
               let method = object["method"] as? String
         else {
             print("Could not parse top level JSON")
-            throw NSError()
+            throw JSONError.invalidJson
         }
 
         var request = JSONRequest(method: method)
@@ -96,7 +96,7 @@ public struct JSONResponse: Encodable {
               UUID(uuidString: id) != nil
         else {
             print("Could not parse top level JSON")
-            throw NSError()
+            throw JSONError.invalidJson
         }
 
         var response = JSONResponse(id: id)
@@ -134,6 +134,11 @@ public struct JSONResponseError: Error, Codable {
     public var message: String
 }
 
+/// An error in sending or receiving JSON response
+public enum JSONError: Error {
+    case invalidJson
+}
+
 // AnyCodable struct to handle Any type
 public struct AnyEncodable: Encodable {
     let value: Any
@@ -155,7 +160,13 @@ public struct AnyEncodable: Encodable {
         case let dictionaryValue as [String: Any]:
             try container.encode(dictionaryValue.mapValues { AnyEncodable($0) })
         default:
-            throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: encoder.codingPath, debugDescription: "AnyCodable value cannot be encoded"))
+            throw EncodingError.invalidValue(
+                value,
+                EncodingError.Context(
+                    codingPath: encoder.codingPath,
+                    debugDescription: "AnyCodable value cannot be encoded"
+                )
+            )
         }
     }
 }

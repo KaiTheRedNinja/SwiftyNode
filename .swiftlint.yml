@@ -1,0 +1,53 @@
+disabled_rules:
+  - todo
+  - trailing_comma
+  - nesting
+#  - cyclomatic_complexity
+#  - type_body_length
+#  - function_body_length
+  - force_cast
+
+type_name:
+  excluded:
+    - ID
+
+identifier_name:
+  excluded:
+    - id
+    - vc
+    - x
+    - y
+
+# paths to ignore during linting.
+excluded:
+  - DerivedData  
+
+opt_in_rules:
+  - attributes
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - missing_docs
+#  - implicit_return
+  - modifier_order
+  - convenience_type
+  - pattern_matching_keywords
+  - multiline_parameters_brackets
+  - multiline_arguments_brackets
+
+custom_rules:
+  spaces_over_tabs:
+    included: ".*\\.swift"
+    name: "Spaces over Tabs"
+    regex: "\t"
+    message: "Prefer spaces for indents over tabs. See Xcode setting: 'Text Editing' -> 'Indentation'"
+    severity: warning
+
+  # Don't use print
+#  disallow_print:
+#    included: ".*.swift"
+#    name: "No print"
+#    # print is defined as any "print(" preceeded by anything other than whitespace
+#    regex: "^\\s*print\\("
+#    message: "Please do not use print(), use OSLog's `Logger`"
+#    severity: warning

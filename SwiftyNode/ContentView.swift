@@ -9,8 +9,10 @@ import SwiftUI
 import SwiftyNodeKit
 
 struct ContentView: View {
-    @AppStorage("moduleLocation") var moduleLocation: String = ""
-    @AppStorage("githubOrg") var githubOrg: String = ""
+    @AppStorage("moduleLocation")
+    var moduleLocation: String = ""
+    @AppStorage("githubOrg")
+    var githubOrg: String = ""
     @State var communicator: NodeCommunicator?
     @State var moduleOutput: String = ""
 
@@ -44,9 +46,9 @@ struct ContentView: View {
                 Button("Stress test") {
                     Task {
                         do {
-                            for i in 0..<5 {
+                            for index in 0..<5 {
                                 _ = try await communicator.notify(
-                                    method: "t\(i)",
+                                    method: "t\(index)",
                                     params: nil
                                 )
                             }

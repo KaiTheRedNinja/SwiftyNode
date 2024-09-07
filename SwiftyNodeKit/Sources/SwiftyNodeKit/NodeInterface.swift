@@ -23,8 +23,8 @@ public class NodeInterface {
 
     /// Executes the module using `node [path here]`, and returns its output value.
     ///
-    /// This function is a suspending function that waits until node has exited, then returns a string. If the file never
-    /// exits, this function will not exit and will cause the caller to hang.
+    /// This function is a suspending function that waits until node has exited, then returns a string. If the file
+    /// never exits, this function will not exit and will cause the caller to hang.
     ///
     /// By default, it executes `index.js` file within the ``moduleLocation``, but it can be changed.
     public func executeModule(targetFile: String = "index.js") throws -> String {

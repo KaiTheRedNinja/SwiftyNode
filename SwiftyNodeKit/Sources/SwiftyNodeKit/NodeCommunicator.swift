@@ -8,20 +8,31 @@
 import Foundation
 import Socket
 
+/// Type alias for a native function callback closure
 public typealias NativeFunction = (_ params: [String: Any]?) -> (any Codable)?
 
+/// A class that manages communication with a NodeJS instance.
 @NodeActor
 public class NodeCommunicator {
+    /// The NodeJS process
     internal var process: NodeProcess!
+    /// The communication socket, used to communicate between Swift and NodeJS
     internal var socket: Socket!
+    /// The assembler, used to combine multiple fragments into complete messages
     internal var assembler: ChunkAssembler!
+    /// An array of `Data`, to be sent once the socket connects.
     internal var sendQueue: [Data] = []
+    /// A map of callbacks to their IDs, which are called and deleted when the NodeJS process
+    /// sends a response for the associated ID.
     internal var callResponses: [UUID: (JSONResponse) -> Void] = [:]
+    /// A map of native functions to their names, which are called when the NodeJS process sends a method request
     internal var nativeFunctions: [String: NativeFunction] = [:]
 
+    /// Creates an empty ``NodeCommunicator``
     public init() {}
 
     /// Starts the socket, and returns the socket path
+    /// - Returns: The path to the Unix socket
     public func start() -> String {
         let name = "/tmp/module_\(UUID().uuidString).sock"
         self.socket = Socket(socketPath: name)
@@ -34,6 +45,9 @@ public class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function notification via the socket
+    /// - Parameters:
+    ///   - method: The name of the method to call
+    ///   - params: Parameters for the method, if any
     public func notify(method: String, params: [String: any Encodable]?) async throws {
         let request = JSONRequest(method: method, params: params, id: nil)
         let data = try JSONEncoder().encode(request)
@@ -44,6 +58,10 @@ public class NodeCommunicator {
     }
 
     /// Makes a JSON-RPC function request via the socket
+    /// - Parameters:
+    ///   - method: The name of the method to call
+    ///   - params: Parameters for the method, if any
+    ///   - returns: The type to return, or `Void.self` if the function is not expected to return anything.
     public func request<R>(method: String, params: [String: any Encodable]?, returns: R.Type) async throws -> R? {
         let id: UUID = UUID()
         let request = JSONRequest(method: method, params: params, id: id.uuidString)
@@ -77,13 +95,22 @@ public class NodeCommunicator {
     }
 
     /// Registers a method that node can call
+    /// - Parameters:
+    ///   - methodName: The name of the method
+    ///   - method: A callback closure, called when NodeJS requests the function.
     func register(methodName: String, _ method: @escaping NativeFunction) {
         self.nativeFunctions[methodName] = method
     }
 
     /// Sends data via the socket.
     ///
-    /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Other errors are thrown.
+    /// Data sent via the socket is prefixed with `[START: {id}]` and `[END: {id}]`, where `id` is a random integer
+    /// between 0 and 10,000. This is so the receiving end can piece together large messages, which are sent in multiple
+    /// parts.
+    ///
+    /// If the socket is not connected, requests are queued and sent sequentially after the socket connects. Any other
+    /// errors will be thrown.
+    /// - Parameter data: The data to send.
     private func send(_ data: Data) async throws {
         let id = Int.random(in: 0...10_000)
         let markedData = "[START: \(id)]".data(using: .utf8)! + data + "[END: \(id)]".data(using: .utf8)!
@@ -99,7 +126,8 @@ public class NodeCommunicator {
         sendQueue = []
     }
 
-    /// Processes a received chunk
+    /// Processes a received chunk, sent from the NodeJS process.
+    /// - Parameter chunk: The complete message chunk
     private func processChunk(_ chunk: String) {
         print("Chunk: \(chunk)")
         let data = chunk.data(using: .utf8)!

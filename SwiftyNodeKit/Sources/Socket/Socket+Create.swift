@@ -33,7 +33,11 @@ public extension Socket {
 
         unlink(socketPath) // Remove any existing socket file
 
-        if Darwin.bind(socket, withUnsafePointer(to: &address, { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { $0 } }), socklen_t(MemoryLayout<sockaddr_un>.size)) == -1 {
+        if Darwin.bind(
+            socket,
+            withUnsafePointer(to: &address, { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { $0 } }),
+            socklen_t(MemoryLayout<sockaddr_un>.size)
+        ) == -1 {
             logError("Error binding socket - \(String(cString: strerror(errno)))")
             return
         }
@@ -64,7 +68,15 @@ public extension Socket {
 
         var clientAddress = sockaddr_un()
         var clientAddressLen = socklen_t(MemoryLayout<sockaddr_un>.size)
-        clientSocket = Darwin.accept(socket, withUnsafeMutablePointer(to: &clientAddress, { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { $0 } }), &clientAddressLen)
+        clientSocket = Darwin.accept(
+            socket,
+            withUnsafeMutablePointer(
+                to: &clientAddress
+            ) {
+                $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { $0 }
+            },
+            &clientAddressLen
+        )
 
         if clientSocket == -1 {
             logError("Error accepting connection - \(String(cString: strerror(errno)))")

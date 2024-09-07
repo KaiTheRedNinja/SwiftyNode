@@ -8,17 +8,24 @@
 import Foundation
 import Darwin
 
+/// A class that manages a Unix Domain Socket connection
 public class Socket {
+    /// The server socket's file reference
     internal var socket: Int32?
+    /// The client socket's file reference
     internal var clientSocket: Int32?
+    /// The path to the socket, as a string
     internal let socketPath: String
 
-    public var delegate: (any SocketDelegate)?
+    /// The socket's delegate, informed of important events
+    public weak var delegate: (any SocketDelegate)?
 
+    /// Whether or not the socket is running and connected to a client socket
     public var isConnected: Bool {
-        clientSocket != nil
+        socket != nil && clientSocket != nil
     }
 
+    /// Creates a ``Socket`` for a given socket path
     public init(socketPath: String) {
         self.socketPath = socketPath
     }
@@ -33,6 +40,8 @@ public class Socket {
     }
 
     /// Sends the provided data to the connected client.
+    ///
+    /// This function breaks it up into chunks of 4096 bytes, as Unix sockets have a maximum write limit of 8192 bytes.
     /// - Parameter data: The data to send.
     public func sendData(_ data: Data) async throws {
         guard let clientSocket = clientSocket else {
@@ -75,7 +84,9 @@ public class Socket {
         }
     }
 
-    /// Reads data from the connected socket.
+    /// Begins the process of reading data from the connected socket.
+    ///
+    /// The ``delegate`` is informed when reads are made.
     private func beginReadData() {
         Task { @SocketActor in
             while true {
@@ -126,7 +137,7 @@ public class Socket {
     }
 }
 
-public protocol SocketDelegate {
+public protocol SocketDelegate: AnyObject {
     func socketDidConnect(_ socket: Socket)
     func socketDidRead(_ socket: Socket, data: Data)
 }

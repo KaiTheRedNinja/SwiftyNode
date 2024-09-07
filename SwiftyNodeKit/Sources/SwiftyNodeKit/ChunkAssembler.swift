@@ -26,10 +26,16 @@ class ChunkAssembler {
 
     private func extractChunks() {
         let pattern = "\\[START: (\\d+)\\]([\\s\\S]*?)\\[END: \\1\\]"
-        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return
+        }
 
         while true {
-            guard let match = regex.firstMatch(in: buffer, options: [], range: NSRange(location: 0, length: buffer.utf16.count)) else {
+            guard let match = regex.firstMatch(
+                in: buffer,
+                options: [],
+                range: NSRange(location: 0, length: buffer.utf16.count)
+            ) else {
                 break
             }
 

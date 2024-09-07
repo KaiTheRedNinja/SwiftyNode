@@ -44,8 +44,8 @@ public class NodeJS {
 
     /// Uses the NodeJS runtime to execute a javascript file in a node project.
     ///
-    /// This function is a suspending function that waits until node has exited, then returns a string. If the file never
-    /// exits, this function will not exit and will cause the caller to hang.
+    /// This function is a suspending function that waits until node has exited, then returns a string. If the file
+    /// never exits, this function will not exit and will cause the caller to hang.
     public func execute(_ fileURL: URL, args: [String] = []) throws -> String {
         var command = "\(nodePath) \(fileURL.standardizedFileURL.relativePath)"
         if !args.isEmpty {
@@ -57,8 +57,8 @@ public class NodeJS {
 
     /// Uses the NodeJS runtime to run a javascript file in a node project.
     ///
-    /// This function is not a suspending function. It will start the node process, then return an object that allows the
-    /// caller to manage it.
+    /// This function is not a suspending function. It will start the node process, then return an object that allows
+    /// the caller to manage it.
     public func run(_ fileURL: URL, args: [String] = []) throws -> NodeProcess {
         var command = "\(nodePath) \(fileURL.standardizedFileURL.relativePath)"
         if !args.isEmpty {
