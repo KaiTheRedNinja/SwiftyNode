@@ -11,29 +11,32 @@ import OSLog
 /// A helper object for logging
 public enum Log {
     /// Logs the given log. This log must be a static string.
-    public static func log(_ message: StaticString, file: String = #fileID) {
-        let parts = file.split(separator: "/")
+    @inlinable
+    public static func log(_ message: StaticString, fileID: String = #fileID, line: Int = #line) {
+        let parts = fileID.split(separator: "/")
         let subsystem = String(parts.first!)
         let category = String(parts.last!)
         let log = Logger(subsystem: subsystem, category: category)
-        log.log("\(message)")
+        log.log("[\(category):\(line)] \(message)")
     }
 
     /// Logs the given piece of information
-    public static func info(_ message: String, file: String = #fileID) {
-        let parts = file.split(separator: "/")
+    @inlinable
+    public static func info(_ message: String, fileID: String = #fileID, line: Int = #line) {
+        let parts = fileID.split(separator: "/")
         let subsystem = String(parts.first!)
         let category = String(parts.last!)
         let log = Logger(subsystem: subsystem, category: category)
-        log.info("\(message)")
+        log.info("[\(category):\(line)] \(message)")
     }
 
     /// Logs the given error
-    public static func error(_ message: String, file: String = #fileID) {
-        let parts = file.split(separator: "/")
+    @inlinable
+    public static func error(_ message: String, fileID: String = #fileID, line: Int = #line) {
+        let parts = fileID.split(separator: "/")
         let subsystem = String(parts.first!)
         let category = String(parts.last!)
         let log = Logger(subsystem: subsystem, category: category)
-        log.error("\(message)")
+        log.error("[\(category):\(line)] \(message)")
     }
 }

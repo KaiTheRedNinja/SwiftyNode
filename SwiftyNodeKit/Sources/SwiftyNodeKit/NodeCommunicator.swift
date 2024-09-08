@@ -10,7 +10,7 @@ import Socket
 import Log
 
 /// Type alias for a native function callback closure
-public typealias NativeFunction = (_ params: [String: Any]?) async throws -> (any Codable)?
+public typealias NativeFunction = (_ params: [String: Data]?) async throws -> (any Codable)?
 
 /// A class that manages communication with a NodeJS instance.
 @NodeActor
@@ -28,9 +28,6 @@ public class NodeCommunicator {
     internal var callResponses: [UUID: (JSONResponse) -> Void] = [:]
     /// A map of native functions to their names, which are called when the NodeJS process sends a method request
     internal var nativeFunctions: [String: NativeFunction] = [:]
-
-    /// Whether or not the process is active, as far as the ``NodeCommunicator`` is aware.
-    @Published public var processActive: Bool = true
 
     /// Creates an empty ``NodeCommunicator``
     public init() {}
@@ -132,12 +129,11 @@ public class NodeCommunicator {
     public func terminate() {
         process?.process.terminate()
         socket?.stopBroadcasting()
-        processActive = false
     }
 
     /// Processes a received chunk, sent from the NodeJS process.
     /// - Parameter chunk: The complete message chunk
-    private func processChunk(_ chunk: String) {
+    private func processChunk(_ chunk: String) { // swiftlint:disable:this function_body_length
         Log.info("Chunk: \(chunk)")
         let data = chunk.data(using: .utf8)!
 
@@ -145,13 +141,23 @@ public class NodeCommunicator {
             Task {
                 var response: JSONResponse?
                 do {
-                    let result = try await nativeFunctions[request.method]?(request.params)
+                    // build the parameters as [String: Data], for easier decoding
+                    var encodedParams: [String: Data]?
+                    let encoder = JSONEncoder()
+                    if let params = request.params {
+                        encodedParams = [:]
+                        for (key, value) in params {
+                            encodedParams![key] = try encoder.encode(AnyEncodable(value))
+                        }
+                    }
+
+                    let result = try await nativeFunctions[request.method]?(encodedParams)
                     if let id = request.id {
                         Log.info("Sending response \(result.debugDescription) to \(id)")
                         response = JSONResponse(result: result, id: id)
-
                     }
                 } catch {
+                    Log.info("Notification function failure \(error.localizedDescription)")
                     if let id = request.id {
                         Log.info("Sending function failure \(error.localizedDescription) to \(id)")
                         response = JSONResponse(

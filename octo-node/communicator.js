@@ -83,6 +83,11 @@ export class SwiftCommunicator {
     this.client.on('error', (err) => {
       console.error('Connection error:', err);
     });
+
+    process.on('SIGINT', () => {
+      this.terminate();
+      process.exit();
+    });
   }
 
   notify(method, params) {

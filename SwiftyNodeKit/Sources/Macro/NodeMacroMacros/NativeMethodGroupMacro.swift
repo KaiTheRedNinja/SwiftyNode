@@ -68,10 +68,20 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
         return [extensionDecl]
     }
 
+    // swiftlint:disable:next function_body_length
     private static func methodRegistration(for function: FunctionDeclSyntax) -> [Declaration] {
         let funcName = function.name
 
         var declParameters: [String] = []
+
+        if !function.parameters.isEmpty {
+            declParameters.append(
+                """
+                    let decoder = JSONDecoder()
+                """
+            )
+        }
+
         for param in function.parameters {
             let firstName = param.firstName.text
             let type = param.type
@@ -79,7 +89,8 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
             @DeclarationsBuilder
             func getObject() -> [Declaration] {
                 """
-                    let \(firstName)Param: \(type) = if let param = params?[\"\(firstName)\"] as? \(type) {
+                    let \(firstName)Param: \(type) = if let paramData = params?[\"\(firstName)\"],
+                        let param = try? decoder.decode(\(type).self, from: paramData) {
                         param
                     } else {
                 """
@@ -110,8 +121,10 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
                 declParam
             }
 
+            let responseAssignment = function.returnType == nil ? "" : "let response = "
+
             """
-                return try await \(funcName)(
+                \(responseAssignment)try await \(funcName)(
             """
 
             let paramCount = function.parameters.count
@@ -121,8 +134,12 @@ public struct NativeMethodGroupMacro: ExtensionMacro {
                 String(repeating: " ", count: 8) + "\(firstName): \(firstName)Param" + trailingComma
             }
 
+            let returnStatement = function.returnType == nil ? "nil" : "response"
+
             """
                 )
+
+                return \(returnStatement)
             }
             """
         }
