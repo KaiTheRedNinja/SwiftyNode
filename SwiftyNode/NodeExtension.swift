@@ -41,7 +41,9 @@ class NodeExtension: ObservableObject {
 
     func terminate() async {
         await communicator.terminate()
-        await moduleOutput = communicator.readConsole()
+        Task { @MainActor in
+            await moduleOutput = communicator.readConsole()
+        }
     }
 }
 

@@ -25,21 +25,22 @@ struct ContentView: View {
             TextField("Module location:", text: $moduleLocation)
             if let nodeExt {
                 InterfaceView(nodeExt: nodeExt)
-            } else {
-                Button("Run module") {
-                    Task {
-                        guard let nodeRuntime = await NodeJS.builtin else {
-                            Log.error("No node runtime found")
-                            return
-                        }
-                        let moduleURL = URL(filePath: moduleLocation)
-                        let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
-                        guard let communicator = try? await interface.runModule() else {
-                            Log.error("Could not start module")
-                            return
-                        }
-                        self.nodeExt = .init(communicator: communicator)
+            }
+            Button("Run module") {
+                Task {
+                    await nodeExt?.terminate()
+                    nodeExt = nil
+                    guard let nodeRuntime = await NodeJS.builtin else {
+                        Log.error("No node runtime found")
+                        return
                     }
+                    let moduleURL = URL(filePath: moduleLocation)
+                    let interface = await NodeInterface(nodeRuntime: nodeRuntime, moduleLocation: moduleURL)
+                    guard let communicator = try? await interface.runModule(targetFile: "index.js") else {
+                        Log.error("Could not start module")
+                        return
+                    }
+                    self.nodeExt = .init(communicator: communicator)
                 }
             }
         }

@@ -156,3 +156,13 @@ This implementation has several possible vulnurability points:
 However, it is secure in the following aspects:
 1. The NodeJS process can crash without the host app crashing
 2. A hijacked socket will only be able to use the APIs exposed to the extension. It cannot execute arbritrary code
+
+# Other Considerations
+
+## Speed
+
+A quick test of a `Swift --(requests)--> Node --(responds)--> Swift` round-trip function call takes about 1.5ms, or about 0.0015s. Although this is
+acceptable for most UI-related cases (such as a button being pressed and showing an immediate result), large amounts of data or many requests may 
+cause noticable delays. This duration may have multiple causes:
+- The regex-based reading system, which may slow large messages
+- The concurrency systems of Node and Swift

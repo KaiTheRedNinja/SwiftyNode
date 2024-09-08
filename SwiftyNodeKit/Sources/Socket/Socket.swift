@@ -114,17 +114,25 @@ public class Socket {
 
     /// Stops the server and closes any open connections.
     public func stopBroadcasting() {
+        // to avoid infinite loops, we only inform of a socket disconnect if one of the sockets is still alive
+        let informDelegate = clientSocket != nil || socket != nil
+
         if let clientSocket = clientSocket {
             Log.log("Closing client socket...")
             close(clientSocket)
+            self.clientSocket = nil
         }
         if let socket = socket {
             Log.log("Closing server socket...")
             close(socket)
+            self.socket = nil
         }
         unlink(socketPath)
-        delegate?.socketDidDisconnect(self)
         Log.log("Broadcasting stopped.")
+
+        if informDelegate {
+            delegate?.socketDidDisconnect(self)
+        }
     }
 }
 
