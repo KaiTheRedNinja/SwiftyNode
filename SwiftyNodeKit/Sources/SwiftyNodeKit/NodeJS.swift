@@ -12,7 +12,9 @@ import Foundation
 public class NodeJS {
     /// A `NodeJS` instance representing the builtin NodeJS runtime, if it exists.
     public static let builtin: NodeJS? = {
-        let nodeString = try? shellAndWait("where node").trimmingCharacters(in: .whitespacesAndNewlines)
+        let nodeString = try? shellAndWait("where node")
+            .split(separator: "\n").first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let nodeString, nodeString.hasPrefix("/") && nodeString.hasSuffix("node") else {
             return nil
         }
