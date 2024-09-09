@@ -11,11 +11,13 @@ This repository is my experimentation for building a working NodeJS-based extens
 # Running SwiftyNode
 
 1. You must have Node installed
-2. Run SwiftyNode
-3. Input the path to the `octo-node` folder (or any other compatible node project)
-4. Press `Run module`
-5. Play around with the buttons that appear. Some buttons may appear to do nothing - if so, check the console for relevant errors or 
+2. Run `npm install` in `octo-node` to install all dependencies
+3. Run the SwiftyNode app from Xcode
+4. Input the path to the `octo-node` folder (or any other compatible node project)
+5. Press `Run module`
+6. Play around with the buttons that appear. Some buttons may appear to do nothing - if so, check the console for relevant errors or 
 information.
+7. To terminate the app, press `Terminate`. This will dump the process's standard output to the `Module Output` area of the UI.
 
 # How It Works
 
